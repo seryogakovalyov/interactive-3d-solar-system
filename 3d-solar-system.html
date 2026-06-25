@@ -435,7 +435,42 @@ function drawPlanet(planet, cx, cy, time) {
   ctx.fillStyle = glowGrad;
   ctx.fill();
 
-  // Saturn rings (behind)
+  // Earth's moon (behind planet body)
+  if (planet.hasMoon) {
+    const moonAngle = planet.angle * 13;
+    const moonOrbit = r + 14 * cameraZoom;
+    const moonInclination = 5.14 * Math.PI / 180;
+    const moonX = pos.x + Math.cos(moonAngle) * moonOrbit;
+    const moonZ = Math.sin(moonAngle) * moonOrbit * Math.sin(moonInclination);
+    const moonY = pos.y + Math.sin(moonAngle) * moonOrbit * Math.cos(cameraTilt) * Math.cos(moonInclination) + moonZ * Math.sin(cameraTilt);
+    const moonR = Math.max(2.5 * cameraZoom, 1);
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+    const moonGrad = ctx.createRadialGradient(moonX - 1, moonY - 1, 0, moonX, moonY, moonR);
+    moonGrad.addColorStop(0, '#e8e8e0');
+    moonGrad.addColorStop(1, '#888880');
+    ctx.fillStyle = moonGrad;
+    ctx.fill();
+  }
+
+  // Decorative moons for gas giants (behind planet body)
+  if (planet.moons) {
+    for (let i = 0; i < planet.moons; i++) {
+      const moonAngle = time * (0.003 + i * 0.001) + i * 1.7;
+      const moonOrbit = r + (18 + i * 8) * cameraZoom;
+      const moonInclination = (1.5 + i * 2.3) * Math.PI / 180;
+      const moonX = pos.x + Math.cos(moonAngle) * moonOrbit;
+      const moonZ = Math.sin(moonAngle) * moonOrbit * Math.sin(moonInclination);
+      const moonY = pos.y + Math.sin(moonAngle) * moonOrbit * Math.cos(cameraTilt) * Math.cos(moonInclination) + moonZ * Math.sin(cameraTilt);
+      const moonR = Math.max((1.4 + i * 0.35) * cameraZoom, 1);
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+      ctx.fillStyle = i % 2 ? 'rgba(210,210,220,0.85)' : 'rgba(190,180,160,0.85)';
+      ctx.fill();
+    }
+  }
+
+  // Saturn rings — back (above planet), body, front (below planet)
   if (planet.rings) {
     ctx.save();
     ctx.translate(pos.x, pos.y);
@@ -447,9 +482,10 @@ function drawPlanet(planet, cx, cy, time) {
       { inner: r * 2.5, outer: r * 2.75, color: 'rgba(180,160,110,0.18)' }
     ];
 
+    // Back rings (upper half)
     for (const ring of ringConfigs) {
       ctx.beginPath();
-      ctx.ellipse(0, 0, ring.outer, ring.outer * 0.28, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, ring.outer, ring.outer * 0.28, 0, Math.PI, Math.PI * 2);
       ctx.strokeStyle = ring.color;
       ctx.lineWidth = (ring.outer - ring.inner);
       ctx.stroke();
@@ -471,6 +507,28 @@ function drawPlanet(planet, cx, cy, time) {
   ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
   ctx.fillStyle = bodyGrad;
   ctx.fill();
+
+  // Saturn rings — front (lower half)
+  if (planet.rings) {
+    ctx.save();
+    ctx.translate(pos.x, pos.y);
+    ctx.scale(1, Math.cos(cameraTilt) * 0.35);
+
+    const ringConfigs = [
+      { inner: r * 1.35, outer: r * 1.95, color: 'rgba(210,190,140,0.5)' },
+      { inner: r * 2.05, outer: r * 2.45, color: 'rgba(190,170,120,0.3)' },
+      { inner: r * 2.5, outer: r * 2.75, color: 'rgba(180,160,110,0.18)' }
+    ];
+
+    for (const ring of ringConfigs) {
+      ctx.beginPath();
+      ctx.ellipse(0, 0, ring.outer, ring.outer * 0.28, 0, 0, Math.PI);
+      ctx.strokeStyle = ring.color;
+      ctx.lineWidth = (ring.outer - ring.inner);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 
   // Jupiter bands
   if (planet.bands) {
@@ -567,41 +625,6 @@ function drawPlanet(planet, cx, cy, time) {
   ctx.fillStyle = `rgba(180,200,230,${0.4 + (cameraZoom - 0.5) * 0.3})`;
   ctx.textAlign = 'center';
   ctx.fillText(planet.name, pos.x, pos.y + r + 14 * cameraZoom);
-
-  // Earth's moon
-  if (planet.hasMoon) {
-    const moonAngle = planet.angle * 13;
-    const moonOrbit = r + 14 * cameraZoom;
-    const moonInclination = 5.14 * Math.PI / 180;
-    const moonX = pos.x + Math.cos(moonAngle) * moonOrbit;
-    const moonZ = Math.sin(moonAngle) * moonOrbit * Math.sin(moonInclination);
-    const moonY = pos.y + Math.sin(moonAngle) * moonOrbit * Math.cos(cameraTilt) * Math.cos(moonInclination) + moonZ * Math.sin(cameraTilt);
-    const moonR = 2.5 * cameraZoom;
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
-    const moonGrad = ctx.createRadialGradient(moonX - 1, moonY - 1, 0, moonX, moonY, moonR);
-    moonGrad.addColorStop(0, '#e8e8e0');
-    moonGrad.addColorStop(1, '#888880');
-    ctx.fillStyle = moonGrad;
-    ctx.fill();
-  }
-
-  // Decorative moons for gas giants
-  if (planet.moons) {
-    for (let i = 0; i < planet.moons; i++) {
-      const moonAngle = time * (0.003 + i * 0.001) + i * 1.7;
-      const moonOrbit = r + (18 + i * 8) * cameraZoom;
-      const moonInclination = (1.5 + i * 2.3) * Math.PI / 180;
-      const moonX = pos.x + Math.cos(moonAngle) * moonOrbit;
-      const moonZ = Math.sin(moonAngle) * moonOrbit * Math.sin(moonInclination);
-      const moonY = pos.y + Math.sin(moonAngle) * moonOrbit * Math.cos(cameraTilt) * Math.cos(moonInclination) + moonZ * Math.sin(cameraTilt);
-      const moonR = (1.4 + i * 0.35) * cameraZoom;
-      ctx.beginPath();
-      ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
-      ctx.fillStyle = i % 2 ? 'rgba(210,210,220,0.85)' : 'rgba(190,180,160,0.85)';
-      ctx.fill();
-    }
-  }
 }
 
 // ==================== MAIN LOOP ====================
@@ -640,14 +663,19 @@ function render() {
 
   const sorted = [...planets].sort((a, b) => a._depth - b._depth);
 
-  drawSun(cx, cy, time);
-
+  // Orbit paths as background
   for (const p of planets) {
     drawOrbitPath(cx, cy, p.orbitRadius * cameraZoom, 'rgba(50,70,110,0.16)');
   }
 
-  for (const p of sorted) {
-    drawPlanet(p, cx, cy, time);
+  // Z-sorted scene: sun + planets
+  const sceneBodies = [
+    { depth: 0, draw: () => drawSun(cx, cy, time) },
+    ...sorted.map(p => ({ depth: p._depth, draw: () => drawPlanet(p, cx, cy, time) }))
+  ];
+  sceneBodies.sort((a, b) => a.depth - b.depth);
+  for (const body of sceneBodies) {
+    body.draw();
   }
 
   if (selectedPlanet) {
