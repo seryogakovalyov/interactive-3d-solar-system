@@ -94,6 +94,42 @@
     font-weight: bold;
   }
 
+  #timeLabel {
+    color: #8090b0;
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .ctrl-btn {
+    appearance: none;
+    border: 1px solid rgba(120, 170, 255, 0.3);
+    background: linear-gradient(180deg, rgba(35,55,100,0.85), rgba(18,25,60,0.85));
+    color: #c0d8ff;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(50, 90, 200, 0.12);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  .ctrl-btn:hover {
+    box-shadow: 0 0 16px rgba(70, 130, 255, 0.25);
+    transform: translateY(-1px);
+  }
+
+  .ctrl-btn:active {
+    transform: translateY(0);
+  }
+
+  .ctrl-btn.active {
+    background: linear-gradient(180deg, rgba(50,80,160,0.9), rgba(25,40,90,0.9));
+    border-color: rgba(130, 180, 255, 0.45);
+  }
+
   #planetInfo {
     position: absolute;
     z-index: 10;
@@ -185,9 +221,13 @@
 <canvas id="main"></canvas>
 
 <div id="controls">
+  <button id="nowBtn" type="button" class="ctrl-btn active">Now</button>
+  <button id="pauseBtn" type="button" class="ctrl-btn">Pause</button>
+  <button id="playBtn" type="button" class="ctrl-btn">Play</button>
   <label>Speed</label>
   <input type="range" id="speedSlider" min="0" max="500" value="100">
-  <span id="speedValue">1.0×</span>
+  <span id="speedValue">LIVE</span>
+  <span id="timeLabel"></span>
 </div>
 
 <div id="planetInfo">
@@ -212,6 +252,10 @@ const ctx = canvas.getContext('2d');
 const infoPanel = document.getElementById('planetInfo');
 const speedSlider = document.getElementById('speedSlider');
 const speedValueEl = document.getElementById('speedValue');
+const timeLabelEl = document.getElementById('timeLabel');
+const nowBtn = document.getElementById('nowBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const playBtn = document.getElementById('playBtn');
 
 function resizeCanvases() {
   const w = window.innerWidth;
@@ -273,20 +317,49 @@ function drawStarfield(time) {
 
 }
 
+// ==================== TIME MODEL ====================
+const EPOCH_MS = Date.UTC(2026, 5, 25, 0, 0, 0);
+
+let simTime = Date.now();
+let liveMode = true;
+let simSpeed = 1;
+
+const PHASES_2026 = {
+  Mercury: 1.32,
+  Venus:   4.58,
+  Earth:   4.76,
+  Mars:    3.68,
+  Jupiter: 0.34,
+  Saturn:  2.72,
+  Uranus:  0.95,
+  Neptune: 3.20
+};
+
+function getPlanetAngle(planet, timeMs) {
+  const daysSinceEpoch = (timeMs - EPOCH_MS) / 86400000;
+  const phase = planet.phaseAtEpoch ?? 0;
+  return phase + (daysSinceEpoch / planet.periodDays) * Math.PI * 2;
+}
+
+function formatSimTime(ms) {
+  const d = new Date(ms);
+  return d.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+}
+
 // ==================== PLANET DATA ====================
 const planets = [
-  { name:'Mercury', color:'#a89d8f', radius:3.5, orbitRadius:70, speed:4.15, diameter:'4,879 km', distance:'57.9M km', period:'88 days', type:'Rocky', tilt:0.03, glowColor:'rgba(176,168,144,0.20)' },
-  { name:'Venus',   color:'#d8b76f', radius:6.2, orbitRadius:100, speed:1.62, diameter:'12,104 km', distance:'108.2M km', period:'225 days', type:'Rocky', tilt:0.05, glowColor:'rgba(232,200,122,0.22)' },
-  { name:'Earth',   color:'#4a90d9', radius:6.6, orbitRadius:135, speed:1.0, diameter:'12,742 km', distance:'149.6M km', period:'365.25 days', type:'Rocky', tilt:0.25, glowColor:'rgba(74,144,217,0.28)', hasMoon:true },
-  { name:'Mars',    color:'#c95a3b', radius:5.0, orbitRadius:175, speed:0.53, diameter:'6,779 km', distance:'227.9M km', period:'687 days', type:'Rocky', tilt:0.15, glowColor:'rgba(212,90,58,0.22)' },
-  { name:'Jupiter', color:'#c89463', radius:15.5, orbitRadius:245, speed:0.084, diameter:'139,820 km', distance:'778.5M km', period:'11.86 years', type:'Gas Giant', tilt:0.12, glowColor:'rgba(212,160,106,0.22)', bands:true, moons:4 },
-  { name:'Saturn',  color:'#dbc37f', radius:13.5, orbitRadius:315, speed:0.034, diameter:'116,460 km', distance:'1.43B km', period:'29.46 years', type:'Gas Giant', tilt:0.18, glowColor:'rgba(232,208,136,0.20)', rings:true, moons:3 },
-  { name:'Uranus',  color:'#7ec8d8', radius:10.2, orbitRadius:385, speed:0.012, diameter:'50,724 km', distance:'2.87B km', period:'84.01 years', type:'Ice Giant', tilt:0.45, glowColor:'rgba(126,200,216,0.18)' },
-  { name:'Neptune', color:'#4a6ae0', radius:10.0, orbitRadius:450, speed:0.006, diameter:'49,244 km', distance:'4.50B km', period:'164.8 years', type:'Ice Giant', tilt:0.1, glowColor:'rgba(74,106,224,0.20)' }
+  { name:'Mercury', color:'#a89d8f', radius:3.5, orbitRadius:70, diameter:'4,879 km', distance:'57.9M km', period:'88 days', type:'Rocky', tilt:0.03, glowColor:'rgba(176,168,144,0.20)', periodDays:87.969, phaseAtEpoch:PHASES_2026.Mercury },
+  { name:'Venus',   color:'#d8b76f', radius:6.2, orbitRadius:100, diameter:'12,104 km', distance:'108.2M km', period:'225 days', type:'Rocky', tilt:0.05, glowColor:'rgba(232,200,122,0.22)', periodDays:224.701, phaseAtEpoch:PHASES_2026.Venus },
+  { name:'Earth',   color:'#4a90d9', radius:6.6, orbitRadius:135, diameter:'12,742 km', distance:'149.6M km', period:'365.25 days', type:'Rocky', tilt:0.25, glowColor:'rgba(74,144,217,0.28)', hasMoon:true, periodDays:365.256, phaseAtEpoch:PHASES_2026.Earth },
+  { name:'Mars',    color:'#c95a3b', radius:5.0, orbitRadius:175, diameter:'6,779 km', distance:'227.9M km', period:'687 days', type:'Rocky', tilt:0.15, glowColor:'rgba(212,90,58,0.22)', periodDays:686.98, phaseAtEpoch:PHASES_2026.Mars },
+  { name:'Jupiter', color:'#c89463', radius:15.5, orbitRadius:245, diameter:'139,820 km', distance:'778.5M km', period:'11.86 years', type:'Gas Giant', tilt:0.12, glowColor:'rgba(212,160,106,0.22)', bands:true, moons:4, periodDays:4332.59, phaseAtEpoch:PHASES_2026.Jupiter },
+  { name:'Saturn',  color:'#dbc37f', radius:13.5, orbitRadius:315, diameter:'116,460 km', distance:'1.43B km', period:'29.46 years', type:'Gas Giant', tilt:0.18, glowColor:'rgba(232,208,136,0.20)', rings:true, moons:3, periodDays:10759.22, phaseAtEpoch:PHASES_2026.Saturn },
+  { name:'Uranus',  color:'#7ec8d8', radius:10.2, orbitRadius:385, diameter:'50,724 km', distance:'2.87B km', period:'84.01 years', type:'Ice Giant', tilt:0.45, glowColor:'rgba(126,200,216,0.18)', periodDays:30688.5, phaseAtEpoch:PHASES_2026.Uranus },
+  { name:'Neptune', color:'#4a6ae0', radius:10.0, orbitRadius:450, diameter:'49,244 km', distance:'4.50B km', period:'164.8 years', type:'Ice Giant', tilt:0.1, glowColor:'rgba(74,106,224,0.20)', periodDays:60182, phaseAtEpoch:PHASES_2026.Neptune }
 ];
 
 planets.forEach(p => {
-  p.angle = Math.random() * Math.PI * 2;
+  p.angle = getPlanetAngle(p, simTime);
   p.clickAnim = 0;
   p.hovered = false;
   p._screenX = 0;
@@ -630,7 +703,9 @@ function buildMoonBodies() {
 
     // Real-ish Earth moon.
     if (planet.hasMoon) {
-      const moonAngle = planet.angle * 13;
+      const moonPeriodDays = 27.321661;
+      const moonDaysSinceEpoch = (simTime - EPOCH_MS) / 86400000;
+      const moonAngle = (moonDaysSinceEpoch / moonPeriodDays) * Math.PI * 2 + planet.angle * 0.15;
       const moonOrbit = pr + 14 * cameraZoom;
 
       // localZ is the moon's forward/backward position around the planet.
@@ -657,7 +732,9 @@ function buildMoonBodies() {
     // Decorative moons for gas giants.
     if (planet.moons) {
       for (let i = 0; i < planet.moons; i++) {
-        const moonAngle = _time * (0.003 + i * 0.001) + i * 1.7;
+        const moonPeriod = 8 + i * 4;
+        const moonDaysSinceEpoch = (simTime - EPOCH_MS) / 86400000;
+        const moonAngle = (moonDaysSinceEpoch / moonPeriod) * Math.PI * 2 + i * 1.7;
         const moonOrbit = pr + (18 + i * 8) * cameraZoom;
 
         const localX = Math.cos(moonAngle) * moonOrbit;
@@ -689,14 +766,24 @@ let _time = 0;
 
 function update(dt) {
   const rawSpeed = parseFloat(speedSlider.value);
-  const speedMultiplier = rawSpeed / 100;
-  speedValueEl.textContent = speedMultiplier.toFixed(1) + '×';
+  simSpeed = Math.max(0, rawSpeed / 100);
 
-  const speed = 0.0003 * speedMultiplier;
+  if (liveMode) {
+    simTime = Date.now();
+    speedValueEl.textContent = 'LIVE';
+  } else if (simSpeed === 0) {
+    speedValueEl.textContent = 'PAUSED';
+  } else {
+    simTime += dt * simSpeed;
+    speedValueEl.textContent = simSpeed.toFixed(1) + '×';
+  }
 
   for (const p of planets) {
-    p.angle += p.speed * speed * dt;
+    p.angle = getPlanetAngle(p, simTime);
   }
+
+  // Earth's moon phase offset — angle relative to Earth-Sun line
+  // (not used here, but computed in buildMoonBodies)
 
   cameraTilt += (targetTilt - cameraTilt) * 0.08;
   cameraRotY += (targetRotY - cameraRotY) * 0.08;
@@ -766,6 +853,14 @@ function animate(timestamp) {
   update(dt);
   drawStarfield(timestamp);
   render();
+
+  if (liveMode) {
+    timeLabelEl.textContent = 'LIVE';
+  } else if (simSpeed === 0) {
+    timeLabelEl.textContent = 'PAUSED';
+  } else {
+    timeLabelEl.textContent = formatSimTime(simTime);
+  }
 
   requestAnimationFrame(animate);
 }
@@ -945,6 +1040,52 @@ function hidePlanetInfo() {
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) animate.lastTime = null;
+});
+
+// ==================== CONTROLS ====================
+nowBtn.addEventListener('click', () => {
+  liveMode = true;
+  simTime = Date.now();
+  speedSlider.value = 100;
+  speedValueEl.textContent = 'LIVE';
+  timeLabelEl.textContent = 'LIVE';
+  nowBtn.classList.add('active');
+  pauseBtn.classList.remove('active');
+  playBtn.classList.remove('active');
+});
+
+pauseBtn.addEventListener('click', () => {
+  liveMode = false;
+  simSpeed = 0;
+  speedSlider.value = 0;
+  speedValueEl.textContent = 'PAUSED';
+  timeLabelEl.textContent = 'PAUSED';
+  pauseBtn.classList.add('active');
+  nowBtn.classList.remove('active');
+  playBtn.classList.remove('active');
+});
+
+playBtn.addEventListener('click', () => {
+  liveMode = false;
+  simSpeed = 1;
+  speedSlider.value = 100;
+  speedValueEl.textContent = '1.0×';
+  playBtn.classList.add('active');
+  nowBtn.classList.remove('active');
+  pauseBtn.classList.remove('active');
+});
+
+speedSlider.addEventListener('input', () => {
+  const rawSpeed = parseFloat(speedSlider.value);
+  simSpeed = Math.max(0, rawSpeed / 100);
+  if (simSpeed > 1.001) {
+    liveMode = false;
+    nowBtn.classList.remove('active');
+    if (simSpeed > 0) {
+      playBtn.classList.add('active');
+      pauseBtn.classList.remove('active');
+    }
+  }
 });
 
 // ==================== START ====================
