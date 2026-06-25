@@ -351,6 +351,7 @@
   <div class="stat"><span class="label">Distance</span><span class="value" id="infoDistance"></span></div>
   <div class="stat"><span class="label">Orbital Period</span><span class="value" id="infoPeriod"></span></div>
   <div class="stat"><span class="label">Type</span><span class="value" id="infoType"></span></div>
+  <div class="stat"><span class="label">Moons</span><span class="value" id="infoMoons"></span></div>
 </div>
 
 <div id="resetHint">Click a planet to inspect · Drag to rotate</div>
@@ -461,6 +462,36 @@ function formatSimTime(ms) {
   const d = new Date(ms);
   return d.toLocaleString();
 }
+
+// ==================== MOON SYSTEMS ====================
+const MOON_SYSTEMS = {
+  Earth: [
+    { name:'Moon', periodDays:27.321661, orbitRadiusFactor:2.0, radius:2.6, color:'#d8d8cf', phaseOffset:1.2 }
+  ],
+  Jupiter: [
+    { name:'Io', periodDays:1.769, orbitRadiusFactor:1.55, radius:1.8, color:'#f1d27a', phaseOffset:0.4 },
+    { name:'Europa', periodDays:3.551, orbitRadiusFactor:1.95, radius:1.7, color:'#d8d0b0', phaseOffset:2.1 },
+    { name:'Ganymede', periodDays:7.155, orbitRadiusFactor:2.45, radius:2.1, color:'#9f9a90', phaseOffset:4.0 },
+    { name:'Callisto', periodDays:16.689, orbitRadiusFactor:3.05, radius:2.0, color:'#7f7468', phaseOffset:5.4 }
+  ],
+  Saturn: [
+    { name:'Enceladus', periodDays:1.370, orbitRadiusFactor:1.65, radius:1.4, color:'#f4f6ff', phaseOffset:0.7 },
+    { name:'Rhea', periodDays:4.518, orbitRadiusFactor:2.15, radius:1.8, color:'#c9c3b8', phaseOffset:2.3 },
+    { name:'Titan', periodDays:15.945, orbitRadiusFactor:2.85, radius:2.5, color:'#d2a86f', phaseOffset:4.8 },
+    { name:'Iapetus', periodDays:79.321, orbitRadiusFactor:4.0, radius:1.7, color:'#b6ab96', phaseOffset:1.5 }
+  ],
+  Uranus: [
+    { name:'Miranda', periodDays:1.413, orbitRadiusFactor:1.55, radius:1.2, color:'#c9c3bd', phaseOffset:0.8 },
+    { name:'Ariel', periodDays:2.520, orbitRadiusFactor:1.9, radius:1.4, color:'#d9d7d2', phaseOffset:2.2 },
+    { name:'Umbriel', periodDays:4.144, orbitRadiusFactor:2.3, radius:1.5, color:'#8f8d91', phaseOffset:4.0 },
+    { name:'Titania', periodDays:8.706, orbitRadiusFactor:2.85, radius:1.9, color:'#c7bfb5', phaseOffset:5.2 },
+    { name:'Oberon', periodDays:13.463, orbitRadiusFactor:3.3, radius:1.8, color:'#9a948c', phaseOffset:1.9 }
+  ],
+  Neptune: [
+    { name:'Triton', periodDays:-5.877, orbitRadiusFactor:2.0, radius:2.2, color:'#d8cfc9', phaseOffset:1.7 },
+    { name:'Proteus', periodDays:1.122, orbitRadiusFactor:1.45, radius:1.2, color:'#8f847c', phaseOffset:4.6 }
+  ]
+};
 
 // ==================== PLANET DATA ====================
 const planets = [
@@ -810,22 +841,21 @@ function drawMoonObject(moon) {
 
 function buildMoonBodies() {
   const bodies = [];
+  const daysSinceEpoch = (simTime - EPOCH_MS) / 86400000;
 
   for (const planet of planets) {
+    const moonDefs = MOON_SYSTEMS[planet.name];
+    if (!moonDefs) continue;
+
     const px = planet._screenX;
     const py = planet._screenY;
     const pr = planet._screenR;
     const pDepth = planet._depth;
 
-    // Real-ish Earth moon.
-    if (planet.hasMoon) {
-      const moonPeriodDays = 27.321661;
-      const moonDaysSinceEpoch = (simTime - EPOCH_MS) / 86400000;
-      const moonAngle = (moonDaysSinceEpoch / moonPeriodDays) * Math.PI * 2 + planet.angle * 0.15;
-      const moonOrbit = pr + 14 * cameraZoom;
+    for (const moonDef of moonDefs) {
+      const moonOrbit = pr * moonDef.orbitRadiusFactor + 6 * cameraZoom;
+      const moonAngle = (daysSinceEpoch / moonDef.periodDays) * Math.PI * 2 + moonDef.phaseOffset;
 
-      // localZ is the moon's forward/backward position around the planet.
-      // Positive depth means "closer to camera" in this scene.
       const localX = Math.cos(moonAngle) * moonOrbit;
       const localZ = Math.sin(moonAngle) * moonOrbit;
       const localY = localZ * Math.cos(cameraTilt);
@@ -834,8 +864,8 @@ function buildMoonBodies() {
         x: px + localX,
         y: py + localY,
         depth: pDepth + localZ,
-        r: Math.max(2.5 * cameraZoom, 1),
-        gradStops: ['#e8e8e0', '#888880']
+        r: Math.max(moonDef.radius * cameraZoom, 1),
+        color: moonDef.color
       };
 
       bodies.push({
@@ -843,34 +873,6 @@ function buildMoonBodies() {
         depth: moon.depth,
         draw: () => drawMoonObject(moon)
       });
-    }
-
-    // Decorative moons for gas giants.
-    if (planet.moons) {
-      for (let i = 0; i < planet.moons; i++) {
-        const moonPeriod = 8 + i * 4;
-        const moonDaysSinceEpoch = (simTime - EPOCH_MS) / 86400000;
-        const moonAngle = (moonDaysSinceEpoch / moonPeriod) * Math.PI * 2 + i * 1.7;
-        const moonOrbit = pr + (18 + i * 8) * cameraZoom;
-
-        const localX = Math.cos(moonAngle) * moonOrbit;
-        const localZ = Math.sin(moonAngle) * moonOrbit;
-        const localY = localZ * Math.cos(cameraTilt);
-
-        const moon = {
-          x: px + localX,
-          y: py + localY,
-          depth: pDepth + localZ,
-          r: Math.max((1.4 + i * 0.35) * cameraZoom, 1),
-          color: i % 2 ? 'rgba(210,210,220,0.88)' : 'rgba(190,180,160,0.88)'
-        };
-
-        bodies.push({
-          type: 'moon',
-          depth: moon.depth,
-          draw: () => drawMoonObject(moon)
-        });
-      }
     }
   }
 
@@ -954,6 +956,20 @@ function render() {
     ctx.strokeStyle = 'rgba(100,150,255,0.08)';
     ctx.lineWidth = 1;
     ctx.stroke();
+
+    // Moon orbits for selected planet
+    const moonDefs = MOON_SYSTEMS[selectedPlanet.name];
+    if (moonDefs) {
+      for (const moonDef of moonDefs) {
+        const moonOrbitR = selectedPlanet._screenR * moonDef.orbitRadiusFactor + 6 * cameraZoom;
+        ctx.beginPath();
+        ctx.ellipse(selectedPlanet._screenX, selectedPlanet._screenY,
+          moonOrbitR, moonOrbitR * Math.cos(cameraTilt), 0, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(100,160,255,0.12)';
+        ctx.lineWidth = 0.5 * cameraZoom;
+        ctx.stroke();
+      }
+    }
   }
 }
 
@@ -1139,6 +1155,16 @@ function showPlanetInfo(planet) {
   document.getElementById('infoDistance').textContent = planet.distance;
   document.getElementById('infoPeriod').textContent = planet.period;
   document.getElementById('infoType').textContent = planet.type;
+
+  const moonDefs = MOON_SYSTEMS[planet.name];
+  if (moonDefs && moonDefs.length > 0) {
+    const moonNames = moonDefs.map(m => `${m.name}${m.periodDays < 0 ? ' (retro)' : ''}`).join(', ');
+    document.getElementById('infoMoons').textContent = moonNames;
+    document.getElementById('infoMoons').closest('.stat').style.display = '';
+  } else {
+    document.getElementById('infoMoons').textContent = '—';
+    document.getElementById('infoMoons').closest('.stat').style.display = 'none';
+  }
 
   // Clamp position to viewport
   let px = planet._screenX;
