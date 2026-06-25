@@ -774,10 +774,10 @@ function update(dt) {
   } else if (simSpeed === 0) {
     speedValueEl.textContent = 'PAUSED';
   } else {
-    // simSpeed * 86400 = days simulated per real second
-    // e.g. 1x → 86400 ms/s = 1 day/s
-    simTime += dt * simSpeed * 86400000;
-    speedValueEl.textContent = (simSpeed >= 100 ? Math.round(simSpeed) : simSpeed.toFixed(1)) + '×';
+    // simSpeed is days of simulated time per real second
+    // e.g. simSpeed=10 → 10 days pass each real second
+    simTime += (dt / 1000) * simSpeed * 86400000;
+    speedValueEl.textContent = (simSpeed >= 100 ? Math.round(simSpeed) : simSpeed.toFixed(1)) + ' days/sec';
   }
 
   for (const p of planets) {
