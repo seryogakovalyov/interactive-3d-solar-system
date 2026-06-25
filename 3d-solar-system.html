@@ -640,11 +640,11 @@ function render() {
 
   const sorted = [...planets].sort((a, b) => a._depth - b._depth);
 
+  drawSun(cx, cy, time);
+
   for (const p of planets) {
     drawOrbitPath(cx, cy, p.orbitRadius * cameraZoom, 'rgba(50,70,110,0.16)');
   }
-
-  drawSun(cx, cy, time);
 
   for (const p of sorted) {
     drawPlanet(p, cx, cy, time);
