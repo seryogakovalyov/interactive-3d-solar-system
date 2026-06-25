@@ -107,7 +107,7 @@
     opacity: 0;
     transform: translate(-50%, -100%) translateY(-20px) scale(0.9);
     transition: opacity 0.35s ease, transform 0.35s ease;
-    min-width: 220px;
+    min-width: 250px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(50, 80, 200, 0.1);
   }
 
@@ -270,22 +270,7 @@ function drawStarfield(time) {
     }
   }
 
-  const shootPhase = (time * 0.0003) % 1;
-  if (shootPhase < 0.02) {
-    const sx = Math.random() * (canvas.width * 0.7) + canvas.width * 0.1;
-    const sy = Math.random() * (canvas.height * 0.35) + canvas.height * 0.05;
-    const sx2 = sx + 80;
-    const sy2 = sy + 40;
-    const grad = starCtx.createLinearGradient(sx, sy, sx2, sy2);
-    grad.addColorStop(0, 'rgba(255,255,255,0.8)');
-    grad.addColorStop(1, 'rgba(255,255,255,0)');
-    starCtx.strokeStyle = grad;
-    starCtx.lineWidth = 1.5;
-    starCtx.beginPath();
-    starCtx.moveTo(sx, sy);
-    starCtx.lineTo(sx2, sy2);
-    starCtx.stroke();
-  }
+
 }
 
 // ==================== PLANET DATA ====================
@@ -767,6 +752,9 @@ canvas.addEventListener('wheel', (e) => {
 }, { passive: false });
 
 // Touch support
+let touchStartPos = null;
+let touchHasMoved = false;
+
 canvas.addEventListener('touchstart', (e) => {
   const touch = e.touches[0];
   const rect = canvas.getBoundingClientRect();
@@ -774,6 +762,9 @@ canvas.addEventListener('touchstart', (e) => {
   const scaleY = canvas.height / rect.height;
   const mx = (touch.clientX - rect.left) * scaleX;
   const my = (touch.clientY - rect.top) * scaleY;
+
+  touchStartPos = { x: touch.clientX, y: touch.clientY };
+  touchHasMoved = false;
 
   for (const p of planets) {
     const dx = mx - p._screenX;
@@ -792,6 +783,7 @@ canvas.addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 canvas.addEventListener('touchmove', (e) => {
+  touchHasMoved = true;
   if (isDragging) {
     const touch = e.touches[0];
     const dx = touch.clientX - lastMouse.x;
@@ -803,7 +795,31 @@ canvas.addEventListener('touchmove', (e) => {
   e.preventDefault();
 }, { passive: false });
 
-canvas.addEventListener('touchend', () => { isDragging = false; });
+canvas.addEventListener('touchend', (e) => {
+  const touch = e.changedTouches[0];
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (touch.clientX - rect.left) * scaleX;
+  const my = (touch.clientY - rect.top) * scaleY;
+
+  if (!touchHasMoved && selectedPlanet) {
+    let hitPlanet = null;
+    for (const p of planets) {
+      const dx = mx - p._screenX;
+      const dy = my - p._screenY;
+      if (Math.sqrt(dx * dx + dy * dy) < Math.max(p._screenR + 15, 20)) {
+        hitPlanet = p;
+        break;
+      }
+    }
+    if (!hitPlanet) {
+      selectedPlanet = null;
+      hidePlanetInfo();
+    }
+  }
+  isDragging = false;
+});
 
 // ==================== INFO PANEL ====================
 function showPlanetInfo(planet) {
