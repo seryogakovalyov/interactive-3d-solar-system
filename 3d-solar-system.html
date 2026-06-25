@@ -575,14 +575,14 @@ const MOON_SYSTEMS = {
 
 // ==================== PLANET DATA ====================
 const planets = [
-  { name:'Mercury', color:'#a89d8f', radius:3.5, orbitRadius:70, diameter:'4,879 km', distance:'57.9M km', period:'88 days', type:'Rocky', tilt:0.03, glowColor:'rgba(176,168,144,0.20)', periodDays:87.969, phaseAtEpoch:PHASES_2026.Mercury },
-  { name:'Venus',   color:'#d8b76f', radius:6.2, orbitRadius:100, diameter:'12,104 km', distance:'108.2M km', period:'225 days', type:'Rocky', tilt:0.05, glowColor:'rgba(232,200,122,0.22)', periodDays:224.701, phaseAtEpoch:PHASES_2026.Venus },
-  { name:'Earth',   color:'#4a90d9', radius:6.6, orbitRadius:135, diameter:'12,742 km', distance:'149.6M km', period:'365.25 days', type:'Rocky', tilt:0.25, glowColor:'rgba(74,144,217,0.28)', hasMoon:true, periodDays:365.256, phaseAtEpoch:PHASES_2026.Earth },
-  { name:'Mars',    color:'#c95a3b', radius:5.0, orbitRadius:175, diameter:'6,779 km', distance:'227.9M km', period:'687 days', type:'Rocky', tilt:0.15, glowColor:'rgba(212,90,58,0.22)', periodDays:686.98, phaseAtEpoch:PHASES_2026.Mars },
-  { name:'Jupiter', color:'#c89463', radius:15.5, orbitRadius:245, diameter:'139,820 km', distance:'778.5M km', period:'11.86 years', type:'Gas Giant', tilt:0.12, glowColor:'rgba(212,160,106,0.22)', bands:true, moons:4, periodDays:4332.59, phaseAtEpoch:PHASES_2026.Jupiter },
-  { name:'Saturn',  color:'#dbc37f', radius:13.5, orbitRadius:315, diameter:'116,460 km', distance:'1.43B km', period:'29.46 years', type:'Gas Giant', tilt:0.18, glowColor:'rgba(232,208,136,0.20)', rings:true, moons:3, periodDays:10759.22, phaseAtEpoch:PHASES_2026.Saturn },
-  { name:'Uranus',  color:'#7ec8d8', radius:10.2, orbitRadius:385, diameter:'50,724 km', distance:'2.87B km', period:'84.01 years', type:'Ice Giant', tilt:0.45, glowColor:'rgba(126,200,216,0.18)', periodDays:30688.5, phaseAtEpoch:PHASES_2026.Uranus },
-  { name:'Neptune', color:'#4a6ae0', radius:10.0, orbitRadius:450, diameter:'49,244 km', distance:'4.50B km', period:'164.8 years', type:'Ice Giant', tilt:0.1, glowColor:'rgba(74,106,224,0.20)', periodDays:60182, phaseAtEpoch:PHASES_2026.Neptune }
+  { name:'Mercury', color:'#a89d8f', radius:3.5, orbitRadius:70, diameter:'4,879 km', distance:'57.9M km', period:'88 days', type:'Rocky', tilt:0.03, glowColor:'rgba(176,168,144,0.20)', periodDays:87.969, phaseAtEpoch:PHASES_2026.Mercury, rotationPeriodDays:58.646 },
+  { name:'Venus',   color:'#d8b76f', radius:6.2, orbitRadius:100, diameter:'12,104 km', distance:'108.2M km', period:'225 days', type:'Rocky', tilt:0.05, glowColor:'rgba(232,200,122,0.22)', periodDays:224.701, phaseAtEpoch:PHASES_2026.Venus, rotationPeriodDays:-243.025 },
+  { name:'Earth',   color:'#4a90d9', radius:6.6, orbitRadius:135, diameter:'12,742 km', distance:'149.6M km', period:'365.25 days', type:'Rocky', tilt:0.25, glowColor:'rgba(74,144,217,0.28)', hasMoon:true, periodDays:365.256, phaseAtEpoch:PHASES_2026.Earth, rotationPeriodDays:1 },
+  { name:'Mars',    color:'#c95a3b', radius:5.0, orbitRadius:175, diameter:'6,779 km', distance:'227.9M km', period:'687 days', type:'Rocky', tilt:0.15, glowColor:'rgba(212,90,58,0.22)', periodDays:686.98, phaseAtEpoch:PHASES_2026.Mars, rotationPeriodDays:1.026 },
+  { name:'Jupiter', color:'#c89463', radius:15.5, orbitRadius:245, diameter:'139,820 km', distance:'778.5M km', period:'11.86 years', type:'Gas Giant', tilt:0.12, glowColor:'rgba(212,160,106,0.22)', bands:true, moons:4, periodDays:4332.59, phaseAtEpoch:PHASES_2026.Jupiter, rotationPeriodDays:0.414 },
+  { name:'Saturn',  color:'#dbc37f', radius:13.5, orbitRadius:315, diameter:'116,460 km', distance:'1.43B km', period:'29.46 years', type:'Gas Giant', tilt:0.18, glowColor:'rgba(232,208,136,0.20)', rings:true, moons:3, periodDays:10759.22, phaseAtEpoch:PHASES_2026.Saturn, rotationPeriodDays:0.444 },
+  { name:'Uranus',  color:'#7ec8d8', radius:10.2, orbitRadius:385, diameter:'50,724 km', distance:'2.87B km', period:'84.01 years', type:'Ice Giant', tilt:0.45, glowColor:'rgba(126,200,216,0.18)', periodDays:30688.5, phaseAtEpoch:PHASES_2026.Uranus, rotationPeriodDays:-0.718 },
+  { name:'Neptune', color:'#4a6ae0', radius:10.0, orbitRadius:450, diameter:'49,244 km', distance:'4.50B km', period:'164.8 years', type:'Ice Giant', tilt:0.1, glowColor:'rgba(74,106,224,0.20)', periodDays:60182, phaseAtEpoch:PHASES_2026.Neptune, rotationPeriodDays:0.671 }
 ];
 
 planets.forEach(p => {
@@ -764,6 +764,285 @@ function drawOrbitPath(cx, cy, orbitR, color) {
   ctx.stroke();
 }
 
+// ==================== PROCEDURAL PLANET TEXTURES ====================
+
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function getPlanetTexture(planet) {
+  if (planet._tex) return planet._tex;
+
+  const SIZE = 256;
+  const tc = document.createElement('canvas');
+  tc.width = SIZE; tc.height = SIZE;
+  const t = tc.getContext('2d');
+
+  const rng = seededRandom(planet.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0));
+
+  switch (planet.name) {
+    case 'Jupiter': {
+      // Banded atmosphere with turbulence and Great Red Spot
+      const bandColors = ['#c4956a','#a67549','#d4a87a','#b8855a','#c89463','#8c633d','#dcc09a','#a07040','#d8b88a','#b08060','#c49468','#9e7050'];
+      const bandCount = 18;
+      for (let y = 0; y < SIZE; y++) {
+        const bandIdx = (y / SIZE) * bandCount;
+        const bandFrac = bandIdx - Math.floor(bandIdx);
+        const ci = Math.floor(bandIdx) % bandColors.length;
+        const ci2 = (Math.floor(bandIdx) + 1) % bandColors.length;
+        const turbulence = (rng() - 0.5) * 4;
+        const alpha = 0.55 + rng() * 0.35;
+        const r1 = parseInt(bandColors[ci].slice(1,3),16);
+        const g1 = parseInt(bandColors[ci].slice(3,5),16);
+        const b1 = parseInt(bandColors[ci].slice(5,7),16);
+        const r2 = parseInt(bandColors[ci2].slice(1,3),16);
+        const g2 = parseInt(bandColors[ci2].slice(3,5),16);
+        const b2 = parseInt(bandColors[ci2].slice(5,7),16);
+        const r = Math.round(r1 + (r2 - r1) * bandFrac + turbulence);
+        const g = Math.round(g1 + (g2 - g1) * bandFrac + turbulence * 0.7);
+        const b = Math.round(b1 + (b2 - b1) * bandFrac + turbulence * 0.5);
+        t.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        t.fillRect(0, y, SIZE, 1);
+      }
+      // Great Red Spot
+      t.beginPath();
+      t.ellipse(140, 155, 22, 14, 0.1, 0, Math.PI * 2);
+      t.fillStyle = 'rgba(190,75,45,0.65)';
+      t.fill();
+      t.beginPath();
+      t.ellipse(140, 155, 14, 9, 0.1, 0, Math.PI * 2);
+      t.fillStyle = 'rgba(210,100,60,0.4)';
+      t.fill();
+      // Swirl details
+      for (let i = 0; i < 30; i++) {
+        t.beginPath();
+        const sx = rng() * SIZE, sy = 40 + rng() * 176, sw = 15 + rng() * 40, sh = 1 + rng() * 3;
+        t.ellipse(sx, sy, sw, sh, 0, 0, Math.PI * 2);
+        t.fillStyle = `rgba(${140+rng()*80},${100+rng()*80},${50+rng()*60},${0.08+rng()*0.1})`;
+        t.fill();
+      }
+      break;
+    }
+    case 'Saturn': {
+      // Subtle bands, golden haze
+      const bandColors = ['#e8d098','#d8c080','#c8b068','#e0cc90','#d0b870','#c4a860','#dcc888'];
+      const bandCount = 14;
+      for (let y = 0; y < SIZE; y++) {
+        const bandIdx = (y / SIZE) * bandCount;
+        const bandFrac = bandIdx - Math.floor(bandIdx);
+        const ci = Math.floor(bandIdx) % bandColors.length;
+        const ci2 = (Math.floor(bandIdx) + 1) % bandColors.length;
+        const turbulence = (rng() - 0.5) * 2;
+        const r1 = parseInt(bandColors[ci].slice(1,3),16);
+        const g1 = parseInt(bandColors[ci].slice(3,5),16);
+        const b1 = parseInt(bandColors[ci].slice(5,7),16);
+        const r2 = parseInt(bandColors[ci2].slice(1,3),16);
+        const g2 = parseInt(bandColors[ci2].slice(3,5),16);
+        const b2 = parseInt(bandColors[ci2].slice(5,7),16);
+        const r = Math.round(r1 + (r2 - r1) * bandFrac + turbulence);
+        const g = Math.round(g1 + (g2 - g1) * bandFrac + turbulence);
+        const b = Math.round(b1 + (b2 - b1) * bandFrac + turbulence);
+        t.fillStyle = `rgba(${r},${g},${b},0.7)`;
+        t.fillRect(0, y, SIZE, 1);
+      }
+      // Subtle storm spots
+      for (let i = 0; i < 5; i++) {
+        t.beginPath();
+        t.ellipse(rng()*SIZE, 30+rng()*200, 6+rng()*12, 3+rng()*5, rng()*0.3, 0, Math.PI*2);
+        t.fillStyle = `rgba(220,200,150,${0.15+rng()*0.15})`;
+        t.fill();
+      }
+      break;
+    }
+    case 'Earth': {
+      // Ocean base
+      t.fillStyle = '#2a5a9a';
+      t.fillRect(0, 0, SIZE, SIZE);
+      // Ocean depth variation
+      for (let i = 0; i < 200; i++) {
+        t.beginPath();
+        t.ellipse(rng()*SIZE, rng()*SIZE, 5+rng()*30, 3+rng()*15, rng()*Math.PI, 0, Math.PI*2);
+        t.fillStyle = `rgba(${20+rng()*30},${70+rng()*50},${120+rng()*60},${0.1+rng()*0.15})`;
+        t.fill();
+      }
+      // Continents
+      const continentDefs = [
+        { x: 80, y: 60, w: 50, h: 70, rot: 0.2 },  // "Americas-ish"
+        { x: 140, y: 50, w: 40, h: 40, rot: -0.1 }, // "Europe/Africa-ish"
+        { x: 160, y: 100, w: 25, h: 50, rot: 0 },   // "Africa-ish"
+        { x: 190, y: 65, w: 60, h: 45, rot: 0.15 },  // "Asia-ish"
+        { x: 220, y: 150, w: 30, h: 25, rot: -0.2 }, // "Australia-ish"
+      ];
+      for (const c of continentDefs) {
+        t.save();
+        t.translate(c.x, c.y);
+        t.rotate(c.rot);
+        for (let j = 0; j < 12; j++) {
+          t.beginPath();
+          t.ellipse((rng()-0.5)*c.w*0.6, (rng()-0.5)*c.h*0.6,
+            5+rng()*c.w*0.35, 5+rng()*c.h*0.35, rng()*Math.PI, 0, Math.PI*2);
+          const g = 80 + rng()*80;
+          t.fillStyle = `rgba(${40+rng()*40},${g},${30+rng()*30},${0.35+rng()*0.3})`;
+          t.fill();
+        }
+        t.restore();
+      }
+      // Clouds
+      for (let i = 0; i < 80; i++) {
+        t.beginPath();
+        t.ellipse(rng()*SIZE, rng()*SIZE, 8+rng()*25, 2+rng()*6, rng()*Math.PI, 0, Math.PI*2);
+        t.fillStyle = `rgba(240,245,255,${0.06+rng()*0.12})`;
+        t.fill();
+      }
+      // Polar caps
+      t.fillStyle = 'rgba(240,245,255,0.5)';
+      t.fillRect(0, 0, SIZE, 18);
+      t.fillRect(0, SIZE-18, SIZE, 18);
+      break;
+    }
+    case 'Mars': {
+      // Dusty base
+      t.fillStyle = '#c46838';
+      t.fillRect(0, 0, SIZE, SIZE);
+      // Surface variation
+      for (let i = 0; i < 300; i++) {
+        t.beginPath();
+        t.ellipse(rng()*SIZE, rng()*SIZE, 2+rng()*15, 2+rng()*10, rng()*Math.PI, 0, Math.PI*2);
+        const r = 140+rng()*60, g = 50+rng()*50, b = 20+rng()*30;
+        t.fillStyle = `rgba(${r},${g},${b},${0.1+rng()*0.2})`;
+        t.fill();
+      }
+      // Dark regions (syrtis etc)
+      for (let i = 0; i < 6; i++) {
+        t.beginPath();
+        t.ellipse(rng()*SIZE, 30+rng()*190, 15+rng()*35, 10+rng()*25, rng()*Math.PI, 0, Math.PI*2);
+        t.fillStyle = `rgba(100,40,20,${0.12+rng()*0.15})`;
+        t.fill();
+      }
+      // Polar caps
+      t.fillStyle = 'rgba(240,235,230,0.6)';
+      t.beginPath();
+      t.ellipse(SIZE/2, 8, SIZE*0.35, 10, 0, 0, Math.PI*2);
+      t.fill();
+      t.beginPath();
+      t.ellipse(SIZE/2, SIZE-8, SIZE*0.25, 7, 0, 0, Math.PI*2);
+      t.fill();
+      // Olympus Mons spot
+      t.beginPath();
+      t.arc(100, 100, 8, 0, Math.PI*2);
+      t.fillStyle = 'rgba(180,100,50,0.4)';
+      t.fill();
+      t.beginPath();
+      t.arc(100, 100, 4, 0, Math.PI*2);
+      t.fillStyle = 'rgba(200,130,70,0.3)';
+      t.fill();
+      break;
+    }
+    case 'Mercury': {
+      // Rocky grey
+      t.fillStyle = '#8a8078';
+      t.fillRect(0, 0, SIZE, SIZE);
+      for (let i = 0; i < 400; i++) {
+        t.beginPath();
+        t.ellipse(rng()*SIZE, rng()*SIZE, 1+rng()*8, 1+rng()*5, rng()*Math.PI, 0, Math.PI*2);
+        t.fillStyle = `rgba(${70+rng()*80},${65+rng()*75},${60+rng()*70},${0.1+rng()*0.2})`;
+        t.fill();
+      }
+      // Craters
+      for (let i = 0; i < 25; i++) {
+        const cx = rng()*SIZE, cy = rng()*SIZE, cr = 3+rng()*12;
+        t.beginPath();
+        t.arc(cx, cy, cr, 0, Math.PI*2);
+        t.strokeStyle = `rgba(50,45,40,${0.2+rng()*0.3})`;
+        t.lineWidth = 1+rng();
+        t.stroke();
+        t.beginPath();
+        t.arc(cx-1, cy-1, cr*0.7, 0, Math.PI*2);
+        t.fillStyle = `rgba(60,55,50,${0.15+rng()*0.15})`;
+        t.fill();
+      }
+      break;
+    }
+    case 'Venus': {
+      // Hazy thick atmosphere
+      t.fillStyle = '#d8c888';
+      t.fillRect(0, 0, SIZE, SIZE);
+      // Cloud swirls
+      for (let i = 0; i < 150; i++) {
+        t.beginPath();
+        t.ellipse(rng()*SIZE, rng()*SIZE, 10+rng()*40, 2+rng()*8, -0.3+rng()*0.6, 0, Math.PI*2);
+        t.fillStyle = `rgba(${200+rng()*55},${180+rng()*55},${120+rng()*60},${0.08+rng()*0.15})`;
+        t.fill();
+      }
+      // Subtle cell structures
+      for (let i = 0; i < 30; i++) {
+        t.beginPath();
+        t.arc(rng()*SIZE, rng()*SIZE, 8+rng()*20, 0, Math.PI*2);
+        t.strokeStyle = `rgba(220,200,140,${0.08+rng()*0.1})`;
+        t.lineWidth = 1;
+        t.stroke();
+      }
+      break;
+    }
+    case 'Uranus': {
+      // Soft ice giant bands
+      const uColors = ['#8ad8e8','#7ac8d8','#6ab8c8','#9ae8f0','#78b8d0','#88c0d8','#a0e0f0'];
+      for (let y = 0; y < SIZE; y++) {
+        const frac = (y / SIZE) * uColors.length;
+        const ci = Math.floor(frac) % uColors.length;
+        const ci2 = (ci + 1) % uColors.length;
+        const f = frac - Math.floor(frac);
+        const r1 = parseInt(uColors[ci].slice(1,3),16), g1 = parseInt(uColors[ci].slice(3,5),16), b1 = parseInt(uColors[ci].slice(5,7),16);
+        const r2 = parseInt(uColors[ci2].slice(1,3),16), g2 = parseInt(uColors[ci2].slice(3,5),16), b2 = parseInt(uColors[ci2].slice(5,7),16);
+        t.fillStyle = `rgba(${Math.round(r1+(r2-r1)*f)},${Math.round(g1+(g2-g1)*f)},${Math.round(b1+(b2-b1)*f)},0.7)`;
+        t.fillRect(0, y, SIZE, 1);
+      }
+      // Subtle cloud wisps
+      for (let i = 0; i < 40; i++) {
+        t.beginPath();
+        t.ellipse(rng()*SIZE, rng()*SIZE, 15+rng()*35, 1+rng()*4, rng()*0.2, 0, Math.PI*2);
+        t.fillStyle = `rgba(200,240,250,${0.05+rng()*0.08})`;
+        t.fill();
+      }
+      break;
+    }
+    case 'Neptune': {
+      // Deep blue bands
+      const nColors = ['#3a5ac8','#4a6ae0','#2a4ab0','#5a7af0','#3a58c0','#4a68d8','#2848a8'];
+      for (let y = 0; y < SIZE; y++) {
+        const frac = (y / SIZE) * nColors.length;
+        const ci = Math.floor(frac) % nColors.length;
+        const ci2 = (ci + 1) % nColors.length;
+        const f = frac - Math.floor(frac);
+        const r1 = parseInt(nColors[ci].slice(1,3),16), g1 = parseInt(nColors[ci].slice(3,5),16), b1 = parseInt(nColors[ci].slice(5,7),16);
+        const r2 = parseInt(nColors[ci2].slice(1,3),16), g2 = parseInt(nColors[ci2].slice(3,5),16), b2 = parseInt(nColors[ci2].slice(5,7),16);
+        t.fillStyle = `rgba(${Math.round(r1+(r2-r1)*f)},${Math.round(g1+(g2-g1)*f)},${Math.round(b1+(b2-b1)*f)},0.7)`;
+        t.fillRect(0, y, SIZE, 1);
+      }
+      // Great Dark Spot
+      t.beginPath();
+      t.ellipse(130, 120, 18, 12, 0.1, 0, Math.PI*2);
+      t.fillStyle = 'rgba(20,30,100,0.35)';
+      t.fill();
+      // Bright cloud streaks
+      for (let i = 0; i < 15; i++) {
+        t.beginPath();
+        t.ellipse(rng()*SIZE, rng()*SIZE, 10+rng()*25, 1+rng()*3, rng()*0.2, 0, Math.PI*2);
+        t.fillStyle = `rgba(180,200,255,${0.08+rng()*0.12})`;
+        t.fill();
+      }
+      break;
+    }
+  }
+
+  planet._tex = tc;
+  return tc;
+}
+
 function lightenColor(hex, amount) {
   const num = parseInt(hex.replace('#', ''), 16);
   const r = Math.min(255, (num >> 16) + amount);
@@ -778,6 +1057,36 @@ function darkenColor(hex, amount) {
   const g = Math.max(0, ((num >> 8) & 0xff) - amount);
   const b = Math.max(0, (num & 0xff) - amount);
   return `rgb(${r},${g},${b})`;
+}
+
+function drawPlanetSurface(planet, x, y, r) {
+  const tex = getPlanetTexture(planet);
+  if (!tex) return;
+
+  const texW = tex.width;
+  const texH = tex.height;
+
+  // Scroll offset from axial rotation
+  const daysSinceEpoch = (simTime - EPOCH_MS) / 86400000;
+  const rotationPhase = daysSinceEpoch / Math.abs(planet.rotationPeriodDays);
+  const scrollX = (rotationPhase * texW * (planet.rotationPeriodDays < 0 ? -1 : 1)) % texW;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.clip();
+
+  // Draw the texture stretched to the planet disc, wrapping horizontally
+  const drawW = r * 2;
+  const drawH = r * 2;
+  for (let sx = scrollX - texW; sx < texW; sx += texW) {
+    ctx.drawImage(tex,
+      (sx / texW - 0.5) * drawW + x,
+      (0 / texH - 0.5) * drawH + y,
+      drawW, drawH);
+  }
+
+  ctx.restore();
 }
 
 function drawPlanet(planet, cx, cy, time) {
@@ -857,62 +1166,9 @@ function drawPlanet(planet, cx, cy, time) {
     ctx.restore();
   }
 
-  // Jupiter bands
-  if (planet.bands) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-    ctx.clip();
-    const bandColors = ['rgba(180,130,80,0.3)', 'rgba(200,160,100,0.2)', 'rgba(160,100,60,0.3)'];
-    for (let i = -3; i <= 3; i++) {
-      ctx.fillStyle = bandColors[Math.abs(i) % 3];
-      ctx.fillRect(pos.x - r, pos.y + i * r * 0.25 - r * 0.06, r * 2, r * 0.12);
-    }
-    ctx.beginPath();
-    ctx.ellipse(pos.x + r * 0.3, pos.y + r * 0.2, r * 0.2, r * 0.12, 0.2, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(200,80,50,0.5)';
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Earth features
-  if (planet.name === 'Earth') {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.fillStyle = 'rgba(60,150,60,0.35)';
-    ctx.beginPath();
-    ctx.ellipse(pos.x - r * 0.2, pos.y - r * 0.1, r * 0.35, r * 0.25, 0.3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(50,140,50,0.3)';
-    ctx.beginPath();
-    ctx.ellipse(pos.x + r * 0.3, pos.y + r * 0.2, r * 0.2, r * 0.3, -0.2, 0, Math.PI * 2);
-    ctx.fill();
-    const atmosGrad = ctx.createRadialGradient(pos.x, pos.y, r * 0.85, pos.x, pos.y, r * 1.15);
-    atmosGrad.addColorStop(0, 'rgba(100,180,255,0)');
-    atmosGrad.addColorStop(1, 'rgba(100,180,255,0.15)');
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, r * 1.15, 0, Math.PI * 2);
-    ctx.fillStyle = atmosGrad;
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Mars polar caps
-  if (planet.name === 'Mars') {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.beginPath();
-    ctx.ellipse(pos.x, pos.y - r * 0.7, r * 0.4, r * 0.15, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(pos.x, pos.y + r * 0.75, r * 0.3, r * 0.12, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+  // Procedural surface texture with axial rotation
+  if (planet.rotationPeriodDays) {
+    drawPlanetSurface(planet, pos.x, pos.y, r);
   }
 
   // Specular highlight
