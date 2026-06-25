@@ -51,6 +51,16 @@
     flex-wrap: nowrap;
     flex-shrink: 0;
     white-space: nowrap;
+    width: max-content;
+    min-width: 0;
+  }
+
+  .controls-top, .controls-bottom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
   }
 
   #controls label {
@@ -97,10 +107,14 @@
   #speedValue {
     color: #c0d8ff;
     font-size: 13px;
-    min-width: 120px;
+    min-width: 140px;
+    max-width: 140px;
+    width: 140px;
     text-align: center;
     font-weight: bold;
     white-space: nowrap;
+    overflow: hidden;
+    flex-shrink: 0;
   }
 
   #timeLabel {
@@ -108,9 +122,13 @@
     font-size: 10px;
     font-family: 'Courier New', monospace;
     letter-spacing: 0.3px;
-    min-width: 140px;
+    min-width: 160px;
+    max-width: 160px;
+    width: 160px;
     text-align: right;
     white-space: nowrap;
+    overflow: hidden;
+    flex-shrink: 0;
   }
 
   .ctrl-btn {
@@ -177,12 +195,12 @@
     }
 
     #timeLabel {
-      min-width: 85px;
+      width: 100px;
       font-size: 8px;
     }
 
     #speedValue {
-      min-width: 55px;
+      width: 70px;
       font-size: 10px;
       white-space: nowrap;
     }
@@ -213,12 +231,12 @@
     }
 
     #timeLabel {
-      min-width: 65px;
+      width: 80px;
       font-size: 7px;
     }
 
     #speedValue {
-      min-width: 45px;
+      width: 55px;
       font-size: 9px;
     }
   }
