@@ -31,6 +31,7 @@
     width: 100%;
     height: 100%;
     z-index: 1;
+    touch-action: none;
   }
 
   #controls {
@@ -159,87 +160,113 @@
     border-color: rgba(130, 180, 255, 0.45);
   }
 
-  @media (max-width: 900px) {
-    #controls {
-      flex-direction: column;
-      align-items: center;
-      padding: 8px 10px;
-      gap: 6px;
-    }
-
-    .controls-top {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      justify-content: center;
-      flex-wrap: nowrap;
-    }
-
-    .controls-bottom {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      justify-content: center;
-      flex-wrap: nowrap;
-    }
-
-    #nowBtn, #pauseBtn, #playBtn {
-      padding: 5px 10px;
-      font-size: 10px;
-      flex-shrink: 0;
-    }
-
-    #speedSlider {
-      width: 90px;
-      flex-shrink: 0;
-    }
-
-    #timeLabel {
-      width: 100px;
-      font-size: 8px;
-    }
-
-    #speedValue {
-      width: 70px;
-      font-size: 10px;
-      white-space: nowrap;
-    }
-
-    #controls label {
-      font-size: 10px;
-      flex-shrink: 0;
-    }
+@media (max-width: 900px) {
+  #controls {
+    top: 18px;
+    width: min(calc(100vw - 32px), 620px);
+    padding: 12px 14px 14px;
+    gap: 12px;
+    border-radius: 24px;
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  @media (max-width: 500px) {
-    #controls {
-      padding: 6px 8px;
-      gap: 4px;
-    }
-
-    .controls-top, .controls-bottom {
-      gap: 4px;
-    }
-
-    #nowBtn, #pauseBtn, #playBtn {
-      padding: 4px 8px;
-      font-size: 9px;
-    }
-
-    #speedSlider {
-      width: 70px;
-    }
-
-    #timeLabel {
-      width: 80px;
-      font-size: 7px;
-    }
-
-    #speedValue {
-      width: 55px;
-      font-size: 9px;
-    }
+  .controls-top {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 8px 12px;
+    width: 100%;
   }
+
+  .controls-bottom {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  #speedValue {
+    width: auto;
+    min-width: 92px;
+    max-width: none;
+    font-size: 13px;
+    text-align: left;
+  }
+
+  #speedSlider {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #timeLabel {
+    grid-column: 1 / -1;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    font-size: 10px;
+    text-align: right;
+    opacity: 0.75;
+  }
+
+  .ctrl-btn,
+  #nowBtn,
+  #pauseBtn,
+  #playBtn {
+    min-height: 40px;
+    padding: 0 16px;
+    font-size: 13px;
+  }
+
+  #controls label {
+    display: none;
+  }
+}
+
+@media (max-width: 500px) {
+  #controls {
+    top: 14px;
+    width: calc(100vw - 28px);
+    padding: 12px 12px 14px;
+    gap: 12px;
+  }
+
+  .controls-top {
+    gap: 8px 10px;
+  }
+
+  .controls-bottom {
+    gap: 8px;
+  }
+
+  #speedValue {
+    min-width: 86px;
+    font-size: 12px;
+  }
+
+  #timeLabel {
+    font-size: 9px;
+  }
+
+  .ctrl-btn,
+  #nowBtn,
+  #pauseBtn,
+  #playBtn {
+    flex: 1;
+    min-height: 42px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .ctrl-btn {
+    touch-action: manipulation;
+  }
+
+  #speedSlider::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+}
 
   #planetInfo {
     position: absolute;
@@ -280,7 +307,14 @@
   }
 
   #planetInfo .stat .label { color: #7890b8; }
-  #planetInfo .stat .value { color: #c0d8ff; font-weight: 600; }
+  #planetInfo .stat .value {
+    color: #c0d8ff;
+    font-weight: 600;
+    text-align: right;
+    max-width: 60%;
+    word-wrap: break-word;
+    white-space: normal;
+  }
 
   .planet-dot {
     width: 14px; height: 14px;
@@ -291,38 +325,73 @@
     box-shadow: 0 0 6px currentColor;
   }
 
-  #zoomHint {
+  #interactionHints {
     position: absolute;
-    bottom: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
+    display: flex;
+    width: calc(100% - 32px);
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  #zoomHint {
     color: rgba(120, 150, 200, 0.35);
     font-size: 11px;
     letter-spacing: 2px;
+    line-height: 1.4;
   }
 
   #resetHint {
-    position: absolute;
-    bottom: 42px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
     color: rgba(120, 150, 200, 0.25);
     font-size: 10px;
     letter-spacing: 1.5px;
+    line-height: 1.4;
   }
 
   #title {
-    position: absolute;
-    bottom: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
     color: rgba(120, 150, 200, 0.4);
     font-size: 11px;
     letter-spacing: 3px;
+    line-height: 1.4;
     text-transform: uppercase;
+  }
+
+  .mobile-hint {
+    display: none;
+  }
+
+  @media (max-width: 600px), (pointer: coarse) {
+    #interactionHints {
+      bottom: max(14px, env(safe-area-inset-bottom));
+      gap: 5px;
+    }
+
+    #title {
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+
+    #resetHint,
+    #zoomHint {
+      max-width: 100%;
+      font-size: 9px;
+      letter-spacing: 1px;
+      line-height: 1.5;
+    }
+
+    .desktop-hint {
+      display: none;
+    }
+
+    .mobile-hint {
+      display: inline;
+    }
   }
 </style>
 </head>
@@ -354,9 +423,17 @@
   <div class="stat"><span class="label">Moons</span><span class="value" id="infoMoons"></span></div>
 </div>
 
-<div id="resetHint">Click a planet to inspect · Drag to rotate</div>
-<div id="zoomHint">Scroll to zoom · Drag to tilt</div>
-<div id="title">Interactive 3D Solar System</div>
+<div id="interactionHints">
+  <div id="title">Interactive 3D Solar System</div>
+  <div id="resetHint">
+    <span class="desktop-hint">Click a planet to inspect · Drag to rotate</span>
+    <span class="mobile-hint">Tap a planet to inspect · One-finger drag to rotate</span>
+  </div>
+  <div id="zoomHint">
+    <span class="desktop-hint">Scroll to zoom · Shift/right-drag to pan</span>
+    <span class="mobile-hint">Two-finger drag to pan · Pinch to zoom · Double-tap empty space to reset</span>
+  </div>
+</div>
 
 <script>
 // ==================== SETUP ====================
@@ -382,7 +459,10 @@ function resizeCanvases() {
   canvas.height = h;
 }
 resizeCanvases();
-window.addEventListener('resize', resizeCanvases);
+window.addEventListener('resize', () => {
+  resizeCanvases();
+  clampPan();
+});
 
 // ==================== STARFIELD ====================
 const stars = [];
@@ -515,17 +595,79 @@ planets.forEach(p => {
   p._screenR = p.radius;
 });
 
+// ==================== MAIN ASTEROID BELT ====================
+const ASTEROID_COUNT = 360;
+const asteroidBelt = [];
+const asteroidColors = [
+  [142, 134, 124],
+  [126, 119, 112],
+  [111, 113, 116],
+  [151, 137, 119],
+  [103, 100, 98]
+];
+
+for (let i = 0; i < ASTEROID_COUNT; i++) {
+  const radialMix = (Math.random() + Math.random()) * 0.5;
+  const orbitRadius = 198 + radialMix * 34;
+  const radiusProgress = (orbitRadius - 198) / 34;
+  const clusterAngle = (i % 7) / 7 * Math.PI * 2;
+  const useCluster = Math.random() < 0.28;
+  const phaseAtEpoch = useCluster
+    ? clusterAngle + (Math.random() - 0.5) * 0.5
+    : Math.random() * Math.PI * 2;
+  const size = 0.6 + Math.pow(Math.random(), 2.1) * 1.2;
+  const brightness = 0.42 + Math.random() * 0.34;
+  const baseColor = asteroidColors[Math.floor(Math.random() * asteroidColors.length)];
+
+  asteroidBelt.push({
+    orbitRadius,
+    phaseAtEpoch,
+    periodDays: (1250 + radiusProgress * 1050) * (0.94 + Math.random() * 0.12),
+    eccentricity: Math.random() * 0.025,
+    eccentricityAngle: Math.random() * Math.PI * 2,
+    size,
+    color: `rgba(${baseColor[0]},${baseColor[1]},${baseColor[2]},${brightness})`,
+    glowColor: `rgba(${baseColor[0]},${baseColor[1]},${baseColor[2]},${brightness * 0.14})`,
+    bright: size > 1.45 && Math.random() < 0.55
+  });
+}
+
 // ==================== CAMERA ====================
 let cameraTilt = 0.68;
 let cameraRotY = 0;
 let cameraZoom = 1.15;
+let cameraPanX = 0;
+let cameraPanY = 0;
 let targetTilt = 0.68;
 let targetRotY = 0;
 let targetZoom = 1.15;
+let targetPanX = 0;
+let targetPanY = 0;
 let isDragging = false;
+let dragMode = null;
 let lastMouse = { x: 0, y: 0 };
+let mouseDragDistance = 0;
 let hoveredPlanet = null;
 let selectedPlanet = null;
+
+function resetCamera() {
+  targetTilt = 0.68;
+  targetRotY = 0;
+  targetZoom = 1.15;
+  targetPanX = 0;
+  targetPanY = 0;
+}
+
+function clampPan() {
+  const maxPanX = canvas.width * 0.45;
+  const maxPanY = canvas.height * 0.35;
+  targetPanX = Math.max(-maxPanX, Math.min(maxPanX, targetPanX));
+  targetPanY = Math.max(-maxPanY, Math.min(maxPanY, targetPanY));
+}
+
+function clampZoom() {
+  targetZoom = Math.max(0.3, Math.min(2.5, targetZoom));
+}
 
 // ==================== FIX: getPlanetScreenPos ====================
 function getPlanetScreenPos(cx, cy, orbitR, angle) {
@@ -879,6 +1021,50 @@ function buildMoonBodies() {
   return bodies;
 }
 
+function drawAsteroidObject(asteroid) {
+  if (asteroid.bright) {
+    ctx.beginPath();
+    ctx.arc(asteroid.x, asteroid.y, asteroid.r * 2.4, 0, Math.PI * 2);
+    ctx.fillStyle = asteroid.glowColor;
+    ctx.fill();
+  }
+
+  ctx.beginPath();
+  ctx.arc(asteroid.x, asteroid.y, asteroid.r, 0, Math.PI * 2);
+  ctx.fillStyle = asteroid.color;
+  ctx.fill();
+}
+
+function buildAsteroidBodies(cx, cy) {
+  const bodies = [];
+  const daysSinceEpoch = (simTime - EPOCH_MS) / 86400000;
+
+  for (const asteroid of asteroidBelt) {
+    const angle = asteroid.phaseAtEpoch +
+      (daysSinceEpoch / asteroid.periodDays) * Math.PI * 2;
+    const orbitalVariation = 1 +
+      asteroid.eccentricity * Math.cos(angle - asteroid.eccentricityAngle);
+    const orbitRadius = asteroid.orbitRadius * orbitalVariation * cameraZoom;
+    const pos = getPlanetScreenPos(cx, cy, orbitRadius, angle);
+    const projectedAsteroid = {
+      x: pos.x,
+      y: pos.y,
+      r: Math.max(0.35, asteroid.size * pos.scale * cameraZoom),
+      color: asteroid.color,
+      glowColor: asteroid.glowColor,
+      bright: asteroid.bright
+    };
+
+    bodies.push({
+      type: 'asteroid',
+      depth: pos.depth,
+      draw: () => drawAsteroidObject(projectedAsteroid)
+    });
+  }
+
+  return bodies;
+}
+
 // ==================== MAIN LOOP ====================
 let _time = 0;
 
@@ -906,13 +1092,15 @@ function update(dt) {
   cameraTilt += (targetTilt - cameraTilt) * 0.08;
   cameraRotY += (targetRotY - cameraRotY) * 0.08;
   cameraZoom += (targetZoom - cameraZoom) * 0.1;
+  cameraPanX += (targetPanX - cameraPanX) * 0.12;
+  cameraPanY += (targetPanY - cameraPanY) * 0.12;
 }
 
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
+  const cx = canvas.width / 2 + cameraPanX;
+  const cy = canvas.height / 2 + cameraPanY;
 
   // 1. Compute all planet screen positions/depths first.
   for (const p of planets) {
@@ -929,7 +1117,7 @@ function render() {
     drawOrbitPath(cx, cy, p.orbitRadius * cameraZoom, 'rgba(50,70,110,0.16)');
   }
 
-  // 3. Sun, planets and moons must be in ONE depth-sorted list.
+  // 3. Sun, planets, moons and asteroids must be in ONE depth-sorted list.
   // In this projection positive depth is closer to the camera.
   const sceneBodies = [
     { type: 'sun', depth: 0, draw: () => drawSun(cx, cy, _time) },
@@ -938,7 +1126,8 @@ function render() {
       depth: p._depth,
       draw: () => drawPlanet(p, cx, cy, _time)
     })),
-    ...buildMoonBodies()
+    ...buildMoonBodies(),
+    ...buildAsteroidBodies(cx, cy)
   ];
 
   // Far first, near last.
@@ -1000,6 +1189,11 @@ function animate(timestamp) {
 
 // ==================== INTERACTION ====================
 canvas.addEventListener('click', (e) => {
+  if (mouseDragDistance > 4) {
+    mouseDragDistance = 0;
+    return;
+  }
+
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
@@ -1053,66 +1247,152 @@ canvas.addEventListener('mousemove', (e) => {
   if (isDragging) {
     const dx = e.clientX - lastMouse.x;
     const dy = e.clientY - lastMouse.y;
-    targetRotY += dx * 0.005;
-    targetTilt = Math.max(0.05, Math.min(1.3, targetTilt + dy * 0.003));
+    mouseDragDistance += Math.sqrt(dx * dx + dy * dy);
+
+    if (dragMode === 'pan') {
+      targetPanX += dx * scaleX;
+      targetPanY += dy * scaleY;
+      clampPan();
+      canvas.style.cursor = 'grabbing';
+    } else {
+      targetRotY += dx * 0.005;
+      targetTilt = Math.max(0.05, Math.min(1.3, targetTilt + dy * 0.003));
+      canvas.style.cursor = 'grabbing';
+    }
+
     lastMouse = { x: e.clientX, y: e.clientY };
   }
 });
 
 canvas.addEventListener('mousedown', (e) => {
-  if (e.button === 0) {
+  if (e.button === 0 || e.button === 2) {
     isDragging = true;
+    dragMode = e.button === 2 || e.shiftKey ? 'pan' : 'rotate';
     lastMouse = { x: e.clientX, y: e.clientY };
+    mouseDragDistance = 0;
+    canvas.style.cursor = 'grabbing';
+    e.preventDefault();
   }
 });
 
-canvas.addEventListener('mouseup', () => { isDragging = false; });
-canvas.addEventListener('mouseleave', () => { isDragging = false; });
+canvas.addEventListener('mouseup', () => {
+  isDragging = false;
+  dragMode = null;
+  canvas.style.cursor = planets.some(p => p.hovered) ? 'pointer' : 'default';
+});
+canvas.addEventListener('mouseleave', () => {
+  isDragging = false;
+  dragMode = null;
+  canvas.style.cursor = 'default';
+});
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
 // Zoom with mouse wheel
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   const delta = -e.deltaY * 0.001;
-  targetZoom = Math.max(0.3, Math.min(2.5, targetZoom + delta));
+  targetZoom += delta;
+  clampZoom();
 }, { passive: false });
 
 // Touch support
 let touchStartPos = null;
 let touchHasMoved = false;
+let touchMode = null;
+let touchMidpoint = null;
+let touchDistance = 0;
+let touchGestureHadMultipleFingers = false;
+let lastEmptyTapTime = 0;
+let lastEmptyTapPos = null;
 
-canvas.addEventListener('touchstart', (e) => {
-  const touch = e.touches[0];
+function getTouchMidpoint(touches) {
+  return {
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2
+  };
+}
+
+function getTouchDistance(touches) {
+  const dx = touches[1].clientX - touches[0].clientX;
+  const dy = touches[1].clientY - touches[0].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function getPlanetAtTouch(touch) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
   const mx = (touch.clientX - rect.left) * scaleX;
   const my = (touch.clientY - rect.top) * scaleY;
 
-  touchStartPos = { x: touch.clientX, y: touch.clientY };
-  touchHasMoved = false;
-
+  let hitPlanet = null;
+  let minDist = Infinity;
   for (const p of planets) {
     const dx = mx - p._screenX;
     const dy = my - p._screenY;
-    if (Math.sqrt(dx * dx + dy * dy) < Math.max(p._screenR + 15, 20)) {
-      selectedPlanet = p;
-      p.clickAnim = 1;
-      showPlanetInfo(p);
-      e.preventDefault();
-      return;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < Math.max(p._screenR + 15, 20) && dist < minDist) {
+      hitPlanet = p;
+      minDist = dist;
     }
   }
-  isDragging = true;
-  lastMouse = { x: touch.clientX, y: touch.clientY };
+  return hitPlanet;
+}
+
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length >= 2) {
+    touchMode = 'panZoom';
+    touchMidpoint = getTouchMidpoint(e.touches);
+    touchDistance = getTouchDistance(e.touches);
+    touchHasMoved = true;
+    touchGestureHadMultipleFingers = true;
+    isDragging = false;
+  } else if (e.touches.length === 1) {
+    const touch = e.touches[0];
+    touchMode = 'rotate';
+    touchStartPos = { x: touch.clientX, y: touch.clientY };
+    touchHasMoved = false;
+    touchGestureHadMultipleFingers = false;
+    isDragging = true;
+    lastMouse = { x: touch.clientX, y: touch.clientY };
+  }
+
   e.preventDefault();
 }, { passive: false });
 
 canvas.addEventListener('touchmove', (e) => {
-  touchHasMoved = true;
-  if (isDragging) {
+  if (e.touches.length >= 2 && touchMode === 'panZoom') {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const nextMidpoint = getTouchMidpoint(e.touches);
+    const nextDistance = getTouchDistance(e.touches);
+
+    targetPanX += (nextMidpoint.x - touchMidpoint.x) * scaleX;
+    targetPanY += (nextMidpoint.y - touchMidpoint.y) * scaleY;
+    clampPan();
+
+    if (touchDistance > 0) {
+      targetZoom *= nextDistance / touchDistance;
+      clampZoom();
+    }
+
+    touchMidpoint = nextMidpoint;
+    touchDistance = nextDistance;
+    touchHasMoved = true;
+  } else if (e.touches.length === 1 && touchMode === 'rotate') {
     const touch = e.touches[0];
     const dx = touch.clientX - lastMouse.x;
     const dy = touch.clientY - lastMouse.y;
+
+    if (touchStartPos) {
+      const totalDx = touch.clientX - touchStartPos.x;
+      const totalDy = touch.clientY - touchStartPos.y;
+      if (Math.sqrt(totalDx * totalDx + totalDy * totalDy) > 6) {
+        touchHasMoved = true;
+      }
+    }
+
     targetRotY += dx * 0.005;
     targetTilt = Math.max(0.05, Math.min(1.3, targetTilt + dy * 0.003));
     lastMouse = { x: touch.clientX, y: touch.clientY };
@@ -1121,29 +1401,69 @@ canvas.addEventListener('touchmove', (e) => {
 }, { passive: false });
 
 canvas.addEventListener('touchend', (e) => {
-  const touch = e.changedTouches[0];
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  const mx = (touch.clientX - rect.left) * scaleX;
-  const my = (touch.clientY - rect.top) * scaleY;
+  if (touchMode === 'panZoom' && e.touches.length < 2) {
+    touchMode = null;
+    touchHasMoved = true;
+    isDragging = false;
+  }
 
-  if (!touchHasMoved && selectedPlanet) {
-    let hitPlanet = null;
-    for (const p of planets) {
-      const dx = mx - p._screenX;
-      const dy = my - p._screenY;
-      if (Math.sqrt(dx * dx + dy * dy) < Math.max(p._screenR + 15, 20)) {
-        hitPlanet = p;
-        break;
+  if (e.touches.length === 0) {
+    const wasTap = touchMode === 'rotate' &&
+      !touchHasMoved &&
+      !touchGestureHadMultipleFingers;
+
+    if (wasTap) {
+      const touch = e.changedTouches[0];
+      const hitPlanet = getPlanetAtTouch(touch);
+
+      if (hitPlanet) {
+        selectedPlanet = hitPlanet;
+        hitPlanet.clickAnim = 1;
+        showPlanetInfo(hitPlanet);
+        lastEmptyTapTime = 0;
+        lastEmptyTapPos = null;
+      } else {
+        selectedPlanet = null;
+        hidePlanetInfo();
+
+        const now = performance.now();
+        const isCloseToLastTap = lastEmptyTapPos &&
+          Math.hypot(
+            touch.clientX - lastEmptyTapPos.x,
+            touch.clientY - lastEmptyTapPos.y
+          ) < 40;
+
+        if (now - lastEmptyTapTime <= 300 && isCloseToLastTap) {
+          resetCamera();
+          lastEmptyTapTime = 0;
+          lastEmptyTapPos = null;
+        } else {
+          lastEmptyTapTime = now;
+          lastEmptyTapPos = { x: touch.clientX, y: touch.clientY };
+        }
       }
     }
-    if (!hitPlanet) {
-      selectedPlanet = null;
-      hidePlanetInfo();
-    }
+
+    touchMode = null;
+    touchStartPos = null;
+    touchMidpoint = null;
+    touchDistance = 0;
+    touchGestureHadMultipleFingers = false;
+    isDragging = false;
   }
+
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', (e) => {
+  touchMode = null;
+  touchStartPos = null;
+  touchMidpoint = null;
+  touchDistance = 0;
+  touchHasMoved = true;
+  touchGestureHadMultipleFingers = false;
   isDragging = false;
+  e.preventDefault();
 });
 
 // ==================== INFO PANEL ====================
