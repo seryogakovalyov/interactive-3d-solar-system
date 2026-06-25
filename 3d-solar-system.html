@@ -89,16 +89,19 @@
   #speedValue {
     color: #c0d8ff;
     font-size: 13px;
-    min-width: 35px;
+    min-width: 120px;
     text-align: center;
     font-weight: bold;
+    white-space: nowrap;
   }
 
   #timeLabel {
-    color: #8090b0;
+    color: #607898;
     font-size: 10px;
     font-family: 'Courier New', monospace;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
+    min-width: 140px;
+    text-align: right;
     white-space: nowrap;
   }
 
@@ -225,7 +228,7 @@
   <button id="pauseBtn" type="button" class="ctrl-btn">Pause</button>
   <button id="playBtn" type="button" class="ctrl-btn">Play</button>
   <label>Speed</label>
-  <input type="range" id="speedSlider" min="0" max="36000" value="100">
+  <input type="range" id="speedSlider" min="0" max="18000" value="100">
   <span id="speedValue">LIVE</span>
   <span id="timeLabel">&nbsp;</span>
 </div>
@@ -323,6 +326,7 @@ const EPOCH_MS = Date.UTC(2026, 5, 25, 0, 0, 0);
 let simTime = Date.now();
 let liveMode = true;
 let simSpeed = 1;
+let isPaused = false;
 
 const PHASES_2026 = {
   Mercury: 1.32,
@@ -343,7 +347,7 @@ function getPlanetAngle(planet, timeMs) {
 
 function formatSimTime(ms) {
   const d = new Date(ms);
-  return d.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+  return d.toLocaleString();
 }
 
 // ==================== PLANET DATA ====================
@@ -765,19 +769,17 @@ function buildMoonBodies() {
 let _time = 0;
 
 function update(dt) {
-  const rawSpeed = parseFloat(speedSlider.value);
-  simSpeed = Math.max(0, rawSpeed / 100);
-
   if (liveMode) {
     simTime = Date.now();
     speedValueEl.textContent = 'LIVE';
-  } else if (simSpeed === 0) {
+  } else if (isPaused) {
     speedValueEl.textContent = 'PAUSED';
   } else {
-    // simSpeed is days of simulated time per real second
-    // e.g. simSpeed=10 → 10 days pass each real second
+    const rawSpeed = parseFloat(speedSlider.value);
+    simSpeed = Math.max(0, rawSpeed / 100);
     simTime += (dt / 1000) * simSpeed * 86400000;
-    speedValueEl.textContent = (simSpeed >= 100 ? Math.round(simSpeed) : simSpeed.toFixed(1)) + ' days/sec';
+    const label = (simSpeed >= 100 ? Math.round(simSpeed) : simSpeed.toFixed(1)) + ' days/sec';
+    speedValueEl.textContent = label;
   }
 
   for (const p of planets) {
@@ -856,10 +858,11 @@ function animate(timestamp) {
   drawStarfield(timestamp);
   render();
 
+  // Update time label
   if (liveMode) {
-    timeLabelEl.textContent = 'LIVE';
+    timeLabelEl.textContent = new Date().toLocaleString();
   } else if (simSpeed === 0) {
-    timeLabelEl.textContent = 'PAUSED';
+    timeLabelEl.textContent = formatSimTime(simTime);
   } else {
     timeLabelEl.textContent = formatSimTime(simTime);
   }
@@ -1050,7 +1053,7 @@ nowBtn.addEventListener('click', () => {
   simTime = Date.now();
   speedSlider.value = 100;
   speedValueEl.textContent = 'LIVE';
-  timeLabelEl.textContent = 'LIVE';
+  timeLabelEl.textContent = new Date().toLocaleString();
   nowBtn.classList.add('active');
   pauseBtn.classList.remove('active');
   playBtn.classList.remove('active');
@@ -1058,10 +1061,9 @@ nowBtn.addEventListener('click', () => {
 
 pauseBtn.addEventListener('click', () => {
   liveMode = false;
-  simSpeed = 0;
-  speedSlider.value = 0;
+  isPaused = true;
   speedValueEl.textContent = 'PAUSED';
-  timeLabelEl.textContent = 'PAUSED';
+  timeLabelEl.textContent = formatSimTime(simTime);
   pauseBtn.classList.add('active');
   nowBtn.classList.remove('active');
   playBtn.classList.remove('active');
@@ -1069,9 +1071,7 @@ pauseBtn.addEventListener('click', () => {
 
 playBtn.addEventListener('click', () => {
   liveMode = false;
-  simSpeed = 1;
-  speedSlider.value = 100;
-  speedValueEl.textContent = '1.0×';
+  isPaused = false;
   playBtn.classList.add('active');
   nowBtn.classList.remove('active');
   pauseBtn.classList.remove('active');
