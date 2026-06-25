@@ -225,7 +225,7 @@
   <button id="pauseBtn" type="button" class="ctrl-btn">Pause</button>
   <button id="playBtn" type="button" class="ctrl-btn">Play</button>
   <label>Speed</label>
-  <input type="range" id="speedSlider" min="0" max="500" value="100">
+  <input type="range" id="speedSlider" min="0" max="36000" value="100">
   <span id="speedValue">LIVE</span>
   <span id="timeLabel"></span>
 </div>
@@ -775,7 +775,7 @@ function update(dt) {
     speedValueEl.textContent = 'PAUSED';
   } else {
     simTime += dt * simSpeed;
-    speedValueEl.textContent = simSpeed.toFixed(1) + '×';
+    speedValueEl.textContent = (simSpeed >= 100 ? Math.round(simSpeed) : simSpeed.toFixed(1)) + '×';
   }
 
   for (const p of planets) {
