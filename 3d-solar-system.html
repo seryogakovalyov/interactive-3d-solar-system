@@ -589,7 +589,7 @@ function drawPlanet(planet, cx, cy, time) {
   // Decorative moons for gas giants
   if (planet.moons) {
     for (let i = 0; i < planet.moons; i++) {
-      const moonAngle = planet.angle * (4 + i * 0.7) + i * 1.7;
+      const moonAngle = time * (0.003 + i * 0.001) + i * 1.7;
       const moonOrbit = r + (18 + i * 8) * cameraZoom;
       const moonInclination = (1.5 + i * 2.3) * Math.PI / 180;
       const moonX = pos.x + Math.cos(moonAngle) * moonOrbit;
