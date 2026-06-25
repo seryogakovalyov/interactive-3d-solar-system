@@ -435,41 +435,6 @@ function drawPlanet(planet, cx, cy, time) {
   ctx.fillStyle = glowGrad;
   ctx.fill();
 
-  // Earth's moon (behind planet body)
-  if (planet.hasMoon) {
-    const moonAngle = planet.angle * 13;
-    const moonOrbit = r + 14 * cameraZoom;
-    const moonInclination = 5.14 * Math.PI / 180;
-    const moonX = pos.x + Math.cos(moonAngle) * moonOrbit;
-    const moonZ = Math.sin(moonAngle) * moonOrbit * Math.sin(moonInclination);
-    const moonY = pos.y + Math.sin(moonAngle) * moonOrbit * Math.cos(cameraTilt) * Math.cos(moonInclination) + moonZ * Math.sin(cameraTilt);
-    const moonR = Math.max(2.5 * cameraZoom, 1);
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
-    const moonGrad = ctx.createRadialGradient(moonX - 1, moonY - 1, 0, moonX, moonY, moonR);
-    moonGrad.addColorStop(0, '#e8e8e0');
-    moonGrad.addColorStop(1, '#888880');
-    ctx.fillStyle = moonGrad;
-    ctx.fill();
-  }
-
-  // Decorative moons for gas giants (behind planet body)
-  if (planet.moons) {
-    for (let i = 0; i < planet.moons; i++) {
-      const moonAngle = time * (0.003 + i * 0.001) + i * 1.7;
-      const moonOrbit = r + (18 + i * 8) * cameraZoom;
-      const moonInclination = (1.5 + i * 2.3) * Math.PI / 180;
-      const moonX = pos.x + Math.cos(moonAngle) * moonOrbit;
-      const moonZ = Math.sin(moonAngle) * moonOrbit * Math.sin(moonInclination);
-      const moonY = pos.y + Math.sin(moonAngle) * moonOrbit * Math.cos(cameraTilt) * Math.cos(moonInclination) + moonZ * Math.sin(cameraTilt);
-      const moonR = Math.max((1.4 + i * 0.35) * cameraZoom, 1);
-      ctx.beginPath();
-      ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
-      ctx.fillStyle = i % 2 ? 'rgba(210,210,220,0.85)' : 'rgba(190,180,160,0.85)';
-      ctx.fill();
-    }
-  }
-
   // Saturn rings — back (above planet), body, front (below planet)
   if (planet.rings) {
     ctx.save();
@@ -625,10 +590,102 @@ function drawPlanet(planet, cx, cy, time) {
   ctx.fillStyle = `rgba(180,200,230,${0.4 + (cameraZoom - 0.5) * 0.3})`;
   ctx.textAlign = 'center';
   ctx.fillText(planet.name, pos.x, pos.y + r + 14 * cameraZoom);
+
+}
+
+// ==================== MOONS / DEPTH HELPERS ====================
+
+
+function drawMoonObject(moon) {
+  ctx.beginPath();
+  ctx.arc(moon.x, moon.y, moon.r, 0, Math.PI * 2);
+
+  if (moon.gradStops) {
+    const mg = ctx.createRadialGradient(
+      moon.x - moon.r * 0.35,
+      moon.y - moon.r * 0.35,
+      0,
+      moon.x,
+      moon.y,
+      moon.r
+    );
+    mg.addColorStop(0, moon.gradStops[0]);
+    mg.addColorStop(1, moon.gradStops[1]);
+    ctx.fillStyle = mg;
+  } else {
+    ctx.fillStyle = moon.color;
+  }
+
+  ctx.fill();
+}
+
+function buildMoonBodies() {
+  const bodies = [];
+
+  for (const planet of planets) {
+    const px = planet._screenX;
+    const py = planet._screenY;
+    const pr = planet._screenR;
+    const pDepth = planet._depth;
+
+    // Real-ish Earth moon.
+    if (planet.hasMoon) {
+      const moonAngle = planet.angle * 13;
+      const moonOrbit = pr + 14 * cameraZoom;
+
+      // localZ is the moon's forward/backward position around the planet.
+      // Positive depth means "closer to camera" in this scene.
+      const localX = Math.cos(moonAngle) * moonOrbit;
+      const localZ = Math.sin(moonAngle) * moonOrbit;
+      const localY = localZ * Math.cos(cameraTilt);
+
+      const moon = {
+        x: px + localX,
+        y: py + localY,
+        depth: pDepth + localZ,
+        r: Math.max(2.5 * cameraZoom, 1),
+        gradStops: ['#e8e8e0', '#888880']
+      };
+
+      bodies.push({
+        type: 'moon',
+        depth: moon.depth,
+        draw: () => drawMoonObject(moon)
+      });
+    }
+
+    // Decorative moons for gas giants.
+    if (planet.moons) {
+      for (let i = 0; i < planet.moons; i++) {
+        const moonAngle = _time * (0.003 + i * 0.001) + i * 1.7;
+        const moonOrbit = pr + (18 + i * 8) * cameraZoom;
+
+        const localX = Math.cos(moonAngle) * moonOrbit;
+        const localZ = Math.sin(moonAngle) * moonOrbit;
+        const localY = localZ * Math.cos(cameraTilt);
+
+        const moon = {
+          x: px + localX,
+          y: py + localY,
+          depth: pDepth + localZ,
+          r: Math.max((1.4 + i * 0.35) * cameraZoom, 1),
+          color: i % 2 ? 'rgba(210,210,220,0.88)' : 'rgba(190,180,160,0.88)'
+        };
+
+        bodies.push({
+          type: 'moon',
+          depth: moon.depth,
+          draw: () => drawMoonObject(moon)
+        });
+      }
+    }
+  }
+
+  return bodies;
 }
 
 // ==================== MAIN LOOP ====================
-let time = 0;
+let _time = 0;
 
 function update(dt) {
   const rawSpeed = parseFloat(speedSlider.value);
@@ -652,6 +709,7 @@ function render() {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
 
+  // 1. Compute all planet screen positions/depths first.
   for (const p of planets) {
     const pos = getPlanetScreenPos(cx, cy, p.orbitRadius * cameraZoom, p.angle);
     p._screenX = pos.x;
@@ -661,23 +719,31 @@ function render() {
     p._screenR = p.radius * pos.scale * cameraZoom;
   }
 
-  const sorted = [...planets].sort((a, b) => a._depth - b._depth);
-
-  // Orbit paths as background
+  // 2. Orbits are background guides, so draw them before bodies.
   for (const p of planets) {
     drawOrbitPath(cx, cy, p.orbitRadius * cameraZoom, 'rgba(50,70,110,0.16)');
   }
 
-  // Z-sorted scene: sun + planets
+  // 3. Sun, planets and moons must be in ONE depth-sorted list.
+  // In this projection positive depth is closer to the camera.
   const sceneBodies = [
-    { depth: 0, draw: () => drawSun(cx, cy, time) },
-    ...sorted.map(p => ({ depth: p._depth, draw: () => drawPlanet(p, cx, cy, time) }))
+    { type: 'sun', depth: 0, draw: () => drawSun(cx, cy, _time) },
+    ...planets.map(p => ({
+      type: 'planet',
+      depth: p._depth,
+      draw: () => drawPlanet(p, cx, cy, _time)
+    })),
+    ...buildMoonBodies()
   ];
+
+  // Far first, near last.
   sceneBodies.sort((a, b) => a.depth - b.depth);
+
   for (const body of sceneBodies) {
     body.draw();
   }
 
+  // UI overlay above the scene.
   if (selectedPlanet) {
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -694,7 +760,7 @@ function animate(timestamp) {
   if (dt > 100) dt = 16.67;
   dt = Math.max(0, Math.min(dt, 33));
 
-  time = timestamp;
+  _time = timestamp;
   animate.lastTime = timestamp;
 
   update(dt);
