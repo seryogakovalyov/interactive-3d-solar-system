@@ -48,6 +48,9 @@
     border-radius: 30px;
     border: 1px solid rgba(100, 140, 255, 0.2);
     box-shadow: 0 0 20px rgba(50, 80, 200, 0.15);
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   #controls label {
@@ -58,10 +61,15 @@
     white-space: nowrap;
   }
 
+  #controls label.hide-mobile {
+    display: none;
+  }
+
   #speedSlider {
     -webkit-appearance: none;
     appearance: none;
     width: 160px;
+    flex-shrink: 0;
     height: 6px;
     border-radius: 3px;
     background: linear-gradient(90deg, #1a2a5e, #4a7aff);
@@ -131,6 +139,88 @@
   .ctrl-btn.active {
     background: linear-gradient(180deg, rgba(50,80,160,0.9), rgba(25,40,90,0.9));
     border-color: rgba(130, 180, 255, 0.45);
+  }
+
+  @media (max-width: 900px) {
+    #controls {
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 10px;
+      gap: 6px;
+    }
+
+    .controls-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
+
+    .controls-bottom {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
+
+    #nowBtn, #pauseBtn, #playBtn {
+      padding: 5px 10px;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    #speedSlider {
+      width: 90px;
+      flex-shrink: 0;
+    }
+
+    #timeLabel {
+      min-width: 85px;
+      font-size: 8px;
+    }
+
+    #speedValue {
+      min-width: 55px;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    #controls label {
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+  }
+
+  @media (max-width: 500px) {
+    #controls {
+      padding: 6px 8px;
+      gap: 4px;
+    }
+
+    .controls-top, .controls-bottom {
+      gap: 4px;
+    }
+
+    #nowBtn, #pauseBtn, #playBtn {
+      padding: 4px 8px;
+      font-size: 9px;
+    }
+
+    #speedSlider {
+      width: 70px;
+    }
+
+    #timeLabel {
+      min-width: 65px;
+      font-size: 7px;
+    }
+
+    #speedValue {
+      min-width: 45px;
+      font-size: 9px;
+    }
   }
 
   #planetInfo {
@@ -224,13 +314,17 @@
 <canvas id="main"></canvas>
 
 <div id="controls">
-  <button id="nowBtn" type="button" class="ctrl-btn active">Now</button>
-  <button id="pauseBtn" type="button" class="ctrl-btn">Pause</button>
-  <button id="playBtn" type="button" class="ctrl-btn">Play</button>
-  <label>Speed</label>
-  <input type="range" id="speedSlider" min="0" max="18000" value="100">
-  <span id="speedValue">LIVE</span>
-  <span id="timeLabel">&nbsp;</span>
+  <div class="controls-top">
+    <span id="speedValue">LIVE</span>
+    <label class="hide-mobile">Speed</label>
+    <input type="range" id="speedSlider" min="0" max="18000" value="100">
+    <span id="timeLabel">&nbsp;</span>
+  </div>
+  <div class="controls-bottom">
+    <button id="nowBtn" type="button" class="ctrl-btn active">Now</button>
+    <button id="pauseBtn" type="button" class="ctrl-btn">Pause</button>
+    <button id="playBtn" type="button" class="ctrl-btn">Play</button>
+  </div>
 </div>
 
 <div id="planetInfo">
@@ -329,14 +423,14 @@ let simSpeed = 1;
 let isPaused = false;
 
 const PHASES_2026 = {
-  Mercury: 1.32,
-  Venus:   4.58,
-  Earth:   4.76,
-  Mars:    3.68,
-  Jupiter: 0.34,
-  Saturn:  2.72,
-  Uranus:  0.95,
-  Neptune: 3.20
+  Mercury: 4.037,
+  Venus:   3.438,
+  Earth:   4.761,
+  Mars:    0.412,
+  Jupiter: 2.059,
+  Saturn:  0.238,
+  Uranus:  1.164,
+  Neptune: 0.048
 };
 
 function getPlanetAngle(planet, timeMs) {
