@@ -1069,7 +1069,7 @@ function drawPlanetSurface(planet, x, y, r) {
   // Scroll offset from axial rotation
   const daysSinceEpoch = (simTime - EPOCH_MS) / 86400000;
   const rotationPhase = daysSinceEpoch / Math.abs(planet.rotationPeriodDays);
-  const scrollX = (rotationPhase * texW * (planet.rotationPeriodDays < 0 ? -1 : 1)) % texW;
+  const scrollX = ((rotationPhase * texW * (planet.rotationPeriodDays < 0 ? -1 : 1)) % texW + texW) % texW;
 
   ctx.save();
   ctx.beginPath();
@@ -1085,6 +1085,15 @@ function drawPlanetSurface(planet, x, y, r) {
       (0 / texH - 0.5) * drawH + y,
       drawW, drawH);
   }
+
+  // Latitude darkening: darken near top/bottom edges for spherical illusion
+  const latGrad = ctx.createLinearGradient(x, y - r, x, y + r);
+  latGrad.addColorStop(0, 'rgba(0,0,0,0.45)');
+  latGrad.addColorStop(0.15, 'rgba(0,0,0,0)');
+  latGrad.addColorStop(0.85, 'rgba(0,0,0,0)');
+  latGrad.addColorStop(1, 'rgba(0,0,0,0.45)');
+  ctx.fillStyle = latGrad;
+  ctx.fillRect(x - r, y - r, drawW, drawH);
 
   ctx.restore();
 }
@@ -1129,21 +1138,6 @@ function drawPlanet(planet, cx, cy, time) {
     ctx.restore();
   }
 
-  // Planet body gradient
-  const bodyGrad = ctx.createRadialGradient(
-    pos.x - r * 0.3, pos.y - r * 0.3, r * 0.1,
-    pos.x, pos.y, r
-  );
-  const baseColor = planet.color;
-  bodyGrad.addColorStop(0, lightenColor(baseColor, 40));
-  bodyGrad.addColorStop(0.6, baseColor);
-  bodyGrad.addColorStop(1, darkenColor(baseColor, 50));
-
-  ctx.beginPath();
-  ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-  ctx.fillStyle = bodyGrad;
-  ctx.fill();
-
   // Saturn rings — front (lower half)
   if (planet.rings) {
     ctx.save();
@@ -1166,9 +1160,60 @@ function drawPlanet(planet, cx, cy, time) {
     ctx.restore();
   }
 
+  // Planet body gradient as base (behind texture for lighting)
+  const bodyGrad = ctx.createRadialGradient(
+    pos.x - r * 0.3, pos.y - r * 0.3, r * 0.1,
+    pos.x, pos.y, r
+  );
+  const baseColor = planet.color;
+  bodyGrad.addColorStop(0, lightenColor(baseColor, 40));
+  bodyGrad.addColorStop(0.6, baseColor);
+  bodyGrad.addColorStop(1, darkenColor(baseColor, 50));
+
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+  ctx.fillStyle = bodyGrad;
+  ctx.fill();
+
   // Procedural surface texture with axial rotation
   if (planet.rotationPeriodDays) {
     drawPlanetSurface(planet, pos.x, pos.y, r);
+  }
+
+  // Spherical shading overlay (dark side)
+  {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+    ctx.clip();
+    const shadeGrad = ctx.createRadialGradient(
+      pos.x - r * 0.3, pos.y - r * 0.3, r * 0.1,
+      pos.x + r * 0.4, pos.y + r * 0.4, r * 1.2
+    );
+    shadeGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    shadeGrad.addColorStop(0.55, 'rgba(0,0,0,0)');
+    shadeGrad.addColorStop(0.8, 'rgba(0,0,0,0.35)');
+    shadeGrad.addColorStop(1, 'rgba(0,0,0,0.7)');
+    ctx.fillStyle = shadeGrad;
+    ctx.fillRect(pos.x - r, pos.y - r, r * 2, r * 2);
+    ctx.restore();
+  }
+
+  // Earth atmosphere glow
+  if (planet.name === 'Earth') {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+    ctx.clip();
+    const atmosGrad = ctx.createRadialGradient(pos.x, pos.y, r * 0.82, pos.x, pos.y, r * 1.12);
+    atmosGrad.addColorStop(0, 'rgba(100,180,255,0)');
+    atmosGrad.addColorStop(0.6, 'rgba(100,180,255,0)');
+    atmosGrad.addColorStop(1, 'rgba(100,180,255,0.25)');
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, r * 1.12, 0, Math.PI * 2);
+    ctx.fillStyle = atmosGrad;
+    ctx.fill();
+    ctx.restore();
   }
 
   // Specular highlight
