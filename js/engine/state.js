@@ -1,0 +1,46 @@
+export const AppState = {
+  _cameraTilt: 0.68,
+  _cameraRotY: 0,
+  _cameraZoom: 1.15,
+  _cameraPanX: 0,
+  _cameraPanY: 0,
+
+  get cameraTilt() { return this._cameraTilt; },
+  get cameraRotY() { return this._cameraRotY; },
+  get cameraZoom() { return this._cameraZoom; },
+  get cameraPanX() { return this._cameraPanX; },
+  get cameraPanY() { return this._cameraPanY; },
+
+  set cameraTilt(v) { this._cameraTilt = v; },
+  set cameraRotY(v) { this._cameraRotY = v; },
+  set cameraZoom(v) { this._cameraZoom = v; },
+  set cameraPanX(v) { this._cameraPanX = v; },
+  set cameraPanY(v) { this._cameraPanY = v; },
+
+  _mainCtx: null,
+  _starCtx: null,
+  _viewportWidth: 0,
+  _viewportHeight: 0,
+  _pixelRatio: 1,
+  _planets: [],
+  _asteroidBelt: [],
+  _moonSystems: null,
+
+  get mainCtx() { return this._mainCtx; },
+  get starCtx() { return this._starCtx; },
+  get viewportWidth() { return this._viewportWidth; },
+  get viewportHeight() { return this._viewportHeight; },
+  get pixelRatio() { return this._pixelRatio; },
+  get planets() { return this._planets; },
+  get asteroidBelt() { return this._asteroidBelt; },
+  get moonSystems() { return this._moonSystems; },
+
+  set mainCtx(v) { this._mainCtx = v; },
+  set starCtx(v) { this._starCtx = v; },
+  set viewportWidth(v) { this._viewportWidth = v; },
+  set viewportHeight(v) { this._viewportHeight = v; },
+  set pixelRatio(v) { this._pixelRatio = v; },
+  set planets(v) { this._planets = v; },
+  set asteroidBelt(v) { this._asteroidBelt = v; },
+  set moonSystems(v) { this._moonSystems = v; }
+};
