@@ -37,13 +37,15 @@ A dependency-free, single-page pseudo-3D solar system rendered with the Canvas 2
 
 ## Run locally
 
-Open `index.html` directly, or serve the directory with any static HTTP server:
+Serve the directory with any static HTTP server:
 
 ```bash
 python3 -m http.server 8000
 ```
 
 Then visit `http://localhost:8000`.
+
+Opening `index.html` directly from the filesystem is not recommended because the app uses ES modules.
 
 ## GitHub Pages
 

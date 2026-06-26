@@ -1,4 +1,4 @@
-import { Camera, clampPan, clampZoom, TargetState } from '../engine/camera.js';
+import { Camera, clampPan, clampZoom, resetCamera, TargetState } from '../engine/camera.js';
 import { AppState } from '../engine/state.js';
 
 export function initInput(inputPanel, hideInfoPanel) {
@@ -121,7 +121,9 @@ export function initInput(inputPanel, hideInfoPanel) {
   }, { passive: false });
 
   // ===== KEYBOARD =====
-  canvas.addEventListener('keydown', (e) => {
+  window.addEventListener('keydown', (e) => {
+    if (['INPUT', 'BUTTON', 'SELECT', 'TEXTAREA'].includes(e.target?.tagName)) return;
+
     const panStep = 24;
     const rotateStep = 0.12;
     let handled = true;
@@ -155,7 +157,7 @@ export function initInput(inputPanel, hideInfoPanel) {
         break;
       case 'r':
       case 'R':
-        Camera.resetCamera();
+        resetCamera();
         break;
       default:
         handled = false;
@@ -303,7 +305,7 @@ export function initInput(inputPanel, hideInfoPanel) {
             ) < 40;
 
           if (now - lastEmptyTapTime <= 300 && isCloseToLastTap) {
-            Camera.resetCamera();
+            resetCamera();
             lastEmptyTapTime = 0;
             lastEmptyTapPos = null;
           } else {

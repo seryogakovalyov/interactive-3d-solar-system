@@ -1,7 +1,8 @@
 import { AppState } from './engine/state.js';
-import { Camera, clampPan } from './engine/camera.js';
-import { Time, getPlanetAngle } from './engine/time.js';
-import { rebuildStars, drawStarfield } from './engine/starfield.js';
+import { clampPan } from './engine/camera.js';
+import { getPlanetAngle } from './engine/time.js';
+import { rebuildStars } from './engine/starfield.js';
+import { MAX_PIXEL_RATIO } from './config/constants.js';
 import { PLANET_DATA, initPlanetState, MOON_SYSTEMS } from './config/planets.js';
 import { buildAsteroidBelt } from './config/asteroids.js';
 import { startAnimation, resetAnimationTimer } from './engine/scene.js';
@@ -12,7 +13,6 @@ function init() {
   // DOM elements
   const starCanvas = document.getElementById('starfield');
   const mainCanvas = document.getElementById('main');
-  const infoPanelEl = document.getElementById('planetInfo');
   const speedSlider = document.getElementById('speedSlider');
   const speedValueEl = document.getElementById('speedValue');
   const timeLabelEl = document.getElementById('timeLabel');
@@ -25,8 +25,8 @@ function init() {
   let pixelRatio = 1;
 
   // State
-  AppState._mainCtx = mainCanvas.getContext('2d');
-  AppState._starCtx = starCanvas.getContext('2d');
+  AppState.mainCtx = mainCanvas.getContext('2d');
+  AppState.starCtx = starCanvas.getContext('2d');
 
   // UI modules
   const inputPanel = createInfoPanel();
@@ -37,7 +37,7 @@ function init() {
   function resizeCanvases() {
     viewportWidth = window.innerWidth;
     viewportHeight = window.innerHeight;
-    pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
 
     for (const c of [starCanvas, mainCanvas]) {
       c.width = Math.round(viewportWidth * pixelRatio);
