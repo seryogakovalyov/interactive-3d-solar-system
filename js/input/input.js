@@ -121,7 +121,25 @@ export function initInput(inputPanel, hideInfoPanel) {
   }, { passive: false });
 
   // ===== KEYBOARD =====
+  function isTextEditingTarget(target) {
+    if (!target) return false;
+    if (target.isContentEditable) return true;
+
+    const tagName = target.tagName;
+    if (tagName === 'TEXTAREA' || tagName === 'SELECT') return true;
+    if (tagName !== 'INPUT') return false;
+
+    const inputType = (target.type || 'text').toLowerCase();
+    return !['button', 'checkbox', 'radio', 'range', 'reset', 'submit'].includes(inputType);
+  }
+
   window.addEventListener('keydown', (e) => {
+    if ((e.key === 'r' || e.key === 'R') && !isTextEditingTarget(e.target)) {
+      resetCamera();
+      e.preventDefault();
+      return;
+    }
+
     if (['INPUT', 'BUTTON', 'SELECT', 'TEXTAREA'].includes(e.target?.tagName)) return;
 
     const panStep = 24;
@@ -154,10 +172,6 @@ export function initInput(inputPanel, hideInfoPanel) {
       case '_':
         TargetState.zoom -= 0.12;
         clampZoom();
-        break;
-      case 'r':
-      case 'R':
-        resetCamera();
         break;
       default:
         handled = false;
