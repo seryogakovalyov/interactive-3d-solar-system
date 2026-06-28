@@ -2,6 +2,7 @@ import { AppState } from './engine/state.js';
 import { clampPan } from './engine/camera.js';
 import { getPlanetAngle } from './engine/time.js';
 import { rebuildStars } from './engine/starfield.js';
+import { rebuildGalaxy } from './engine/galaxy.js';
 import { MAX_PIXEL_RATIO } from './config/constants.js';
 import { PLANET_DATA, initPlanetState, MOON_SYSTEMS } from './config/planets.js';
 import { buildAsteroidBelt } from './config/asteroids.js';
@@ -59,10 +60,12 @@ function init() {
   window.addEventListener('resize', () => {
     resizeCanvases();
     rebuildStars(viewportWidth, viewportHeight);
+    rebuildGalaxy(viewportWidth, viewportHeight);
   });
 
   // Starfield
   rebuildStars(viewportWidth, viewportHeight);
+  rebuildGalaxy(viewportWidth, viewportHeight);
 
   // Data
   AppState.moonSystems = MOON_SYSTEMS;

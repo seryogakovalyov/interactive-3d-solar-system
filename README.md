@@ -10,6 +10,7 @@ A dependency-free, single-page pseudo-3D solar system rendered with the Canvas 2
 - Procedural rotating planet textures and axial tilts
 - Planet moons with depth-aware orbital rendering
 - Main asteroid belt
+- Far-zoom procedural galaxy reveal
 - World-oriented Saturn rings
 - Depth sorting for the Sun, planets, moons, and asteroids
 - Desktop and mobile camera controls

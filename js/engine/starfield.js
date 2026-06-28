@@ -1,3 +1,5 @@
+import { drawGalaxy } from './galaxy.js';
+
 const stars = [];
 
 export function rebuildStars(vw, vh) {
@@ -28,6 +30,8 @@ export function drawStarfield(ctx, time, vw, vh) {
   grd.addColorStop(1, '#010208');
   ctx.fillStyle = grd;
   ctx.fillRect(0, 0, vw, vh);
+
+  drawGalaxy(ctx);
 
   for (const s of stars) {
     const twinkle = 0.5 + 0.5 * Math.sin(time * s.twinkleSpeed + s.twinkleOffset);

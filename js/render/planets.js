@@ -1,6 +1,7 @@
 import { AppState } from '../engine/state.js';
 import { Time } from '../engine/time.js';
 import { Camera } from '../engine/camera.js';
+import { getGalaxyRevealFactor } from '../engine/galaxy.js';
 import { getPlanetTexture, getPlanetTexturePixels } from './textures.js';
 import { drawSaturnRingHalf } from './rings.js';
 
@@ -18,6 +19,10 @@ function darkenColor(hex, amount) {
   const g = Math.max(0, ((num >> 8) & 0xff) - amount);
   const b = Math.max(0, (num & 0xff) - amount);
   return `rgb(${r},${g},${b})`;
+}
+
+function clamp01(value) {
+  return Math.max(0, Math.min(1, value));
 }
 
 export function drawOrbitPath(cx, cy, orbitR, color) {
@@ -207,8 +212,11 @@ export function drawPlanet(planet, cx, cy, time) {
     ctx.stroke();
   }
 
-  ctx.font = `${Math.max(8, Math.round(10 * AppState.cameraZoom))}px 'Segoe UI', sans-serif`;
-  ctx.fillStyle = `rgba(180,200,230,${0.4 + (AppState.cameraZoom - 0.5) * 0.3})`;
-  ctx.textAlign = 'center';
-  ctx.fillText(planet.name, pos.x, pos.y + r + 14 * AppState.cameraZoom);
+  const labelAlpha = clamp01((AppState.cameraZoom - 0.12) / 0.16) * (1 - getGalaxyRevealFactor());
+  if (labelAlpha > 0.02) {
+    ctx.font = `${Math.max(8, Math.round(10 * AppState.cameraZoom))}px 'Segoe UI', sans-serif`;
+    ctx.fillStyle = `rgba(180,200,230,${labelAlpha * (0.4 + (AppState.cameraZoom - 0.5) * 0.3)})`;
+    ctx.textAlign = 'center';
+    ctx.fillText(planet.name, pos.x, pos.y + r + 14 * AppState.cameraZoom);
+  }
 }
